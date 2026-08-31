@@ -413,4 +413,4 @@ function showToast(message, type = 'info') {
             toast.remove();
         }, 300);
     }, 3000);
-        }
+}
