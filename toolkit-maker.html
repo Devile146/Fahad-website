@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/toolkit-maker.css">
     
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -25,7 +24,6 @@
             messagingSenderId: "487340113323",
             appId: "1:487340113323:web:6c0923e8c95b4064e5a6ee"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -36,15 +34,6 @@
     <div class="bg-glow-purple"></div>
     <div class="bg-glow-blue"></div>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="toolkitLoadingOverlay" style="display: none;">
-        <div class="loading-box">
-            <div class="loading-spinner"></div>
-            <p id="loadingText">Checking Access...</p>
-        </div>
-    </div>
-
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="nav-logo">
@@ -54,7 +43,6 @@
                     <span class="logo-tagline">Premium Platform</span>
                 </div>
             </a>
-            
             <div class="nav-center">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="tools.html" class="nav-link">Tools</a>
@@ -63,42 +51,23 @@
                 <a href="about.html" class="nav-link">About</a>
                 <a href="contact.html" class="nav-link">Contact</a>
             </div>
-            
             <div class="nav-right">
                 <div class="user-account-area" id="userAccountArea">
                     <div class="guest-buttons" id="guestButtons">
-                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')">
-                            <i class="fas fa-user-plus"></i> Create Account
-                        </button>
+                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
+                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
                     </div>
-                    
-                    <div class="user-logged-in" id="userLoggedIn" style="display: none;">
-                        <div class="user-credits-display">
-                            <i class="fas fa-coins"></i>
-                            <span id="navCredits">0</span>
-                            <span class="credits-label">Credits</span>
-                        </div>
+                    <div class="user-logged-in" id="userLoggedIn" style="display:none;">
+                        <div class="user-credits-display"><i class="fas fa-coins"></i><span id="navCredits">0</span><span class="credits-label">Credits</span></div>
                         <div class="user-profile-menu">
-                            <button class="profile-btn" onclick="goToAccount()">
-                                <i class="fas fa-user-circle"></i>
-                                <span id="navUserName">Account</span>
-                            </button>
-                            <button class="logout-btn" onclick="logoutUser()">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
+                            <button class="profile-btn" onclick="goToAccount()"><i class="fas fa-user-circle"></i><span id="navUserName">Account</span></button>
+                            <button class="logout-btn" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i></button>
                         </div>
                     </div>
                 </div>
-                
-                <button class="hamburger" id="hamburgerBtn">
-                    <span></span><span></span><span></span>
-                </button>
+                <button class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></button>
             </div>
         </div>
-        
         <div class="mobile-menu" id="mobileMenu">
             <a href="index.html">Home</a>
             <a href="tools.html">Tools</a>
@@ -110,7 +79,6 @@
         </div>
     </nav>
 
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-inner">
             <a href="index.html" class="sidebar-link"><i class="fas fa-home"></i><span>Home</span></a>
@@ -127,255 +95,121 @@
         </div>
     </aside>
 
-    <!-- Main Content - VISIBLE BY DEFAULT -->
-    <main class="main-content toolkit-main" id="toolkitMainContent" style="display: block;">
+    <!-- Main Content - HIDDEN -->
+    <main class="main-content toolkit-main" id="toolkitMainContent" style="display:none;">
         <div class="toolkit-header">
             <h1 class="page-title">🛠️ <span class="gradient-text">Toolkit Maker</span></h1>
             <p class="page-description">Create your own premium toolkit website in minutes</p>
         </div>
-
         <div class="toolkit-builder">
             <div class="builder-section">
                 <h2 class="builder-section-title"><i class="fas fa-info-circle"></i> Toolkit Information</h2>
                 <div class="builder-form">
-                    <div class="form-group">
-                        <label>Toolkit Name *</label>
-                        <input type="text" id="toolkitName" placeholder="e.g., My Premium Tools" required>
-                    </div>
-                    <div class="form-group">
-                        <label>About Toolkit</label>
-                        <textarea id="toolkitAbout" rows="3" placeholder="Describe your toolkit..."></textarea>
-                    </div>
+                    <div class="form-group"><label>Toolkit Name *</label><input type="text" id="toolkitName" placeholder="e.g., My Premium Tools"></div>
+                    <div class="form-group"><label>About Toolkit</label><textarea id="toolkitAbout" rows="3"></textarea></div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Profile Image Upload</label>
-                            <input type="file" id="profileImageUpload" accept="image/*" onchange="handleImageUpload(event)">
-                        </div>
-                        <div class="form-group">
-                            <label>Or Image URL</label>
-                            <input type="url" id="profileImageUrl" placeholder="https://imgbb.com/your-image" onchange="previewImageUrl()">
-                        </div>
+                        <div class="form-group"><label>Profile Image Upload</label><input type="file" id="profileImageUpload" accept="image/*" onchange="handleImageUpload(event)"></div>
+                        <div class="form-group"><label>Or Image URL</label><input type="url" id="profileImageUrl" onchange="previewImageUrl()"></div>
                     </div>
-                    <div class="profile-preview" id="profilePreview" style="display:none;">
-                        <img id="profilePreviewImg" src="" alt="Profile Preview">
-                    </div>
+                    <div class="profile-preview" id="profilePreview" style="display:none;"><img id="profilePreviewImg" src="" alt=""></div>
                 </div>
             </div>
-
             <div class="builder-section">
                 <h2 class="builder-section-title"><i class="fas fa-box"></i> Add Products/Tools</h2>
                 <div class="products-list" id="productsList"></div>
-                <button class="add-product-btn" onclick="showProductForm()">
-                    <i class="fas fa-plus"></i> Add Product
-                </button>
+                <button class="add-product-btn" onclick="showProductForm()"><i class="fas fa-plus"></i> Add Product</button>
                 <div class="product-form" id="productForm" style="display:none;">
-                    <div class="form-group">
-                        <label>Product Name *</label>
-                        <input type="text" id="productName" placeholder="e.g., AI Tool Pro">
-                    </div>
-                    <div class="form-group">
-                        <label>Product Link *</label>
-                        <input type="url" id="productLink" placeholder="https://...">
-                    </div>
-                    <div class="form-group">
-                        <label>About Product</label>
-                        <textarea id="productAbout" rows="2" placeholder="Short description..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Product Type</label>
-                        <select id="productType">
-                            <option value="free">FREE</option>
-                            <option value="premium">PREMIUM</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button class="save-btn" onclick="saveProduct()"><i class="fas fa-check"></i> Save Product</button>
-                        <button class="cancel-btn" onclick="hideProductForm()"><i class="fas fa-times"></i> Cancel</button>
-                    </div>
+                    <div class="form-group"><label>Product Name *</label><input type="text" id="productName"></div>
+                    <div class="form-group"><label>Product Link *</label><input type="url" id="productLink"></div>
+                    <div class="form-group"><label>About Product</label><textarea id="productAbout" rows="2"></textarea></div>
+                    <div class="form-group"><label>Product Type</label><select id="productType"><option value="free">FREE</option><option value="premium">PREMIUM</option></select></div>
+                    <div class="form-actions"><button class="save-btn" onclick="saveProduct()">Save</button><button class="cancel-btn" onclick="hideProductForm()">Cancel</button></div>
                 </div>
             </div>
-
             <div class="builder-section">
-                <h2 class="builder-section-title"><i class="fas fa-address-book"></i> Get In Touch (Optional)</h2>
+                <h2 class="builder-section-title"><i class="fas fa-address-book"></i> Get In Touch</h2>
                 <div class="builder-form">
-                    <div class="form-group">
-                        <label>WhatsApp Number</label>
-                        <input type="tel" id="whatsappNumber" placeholder="+92xxxxxxxxxx">
-                    </div>
-                    <div class="form-group">
-                        <label>Telegram Username</label>
-                        <input type="text" id="telegramUsername" placeholder="@username">
-                    </div>
-                    <div class="form-group">
-                        <label>YouTube Channel Link</label>
-                        <input type="url" id="youtubeLink" placeholder="https://youtube.com/@channel">
-                    </div>
-                    <div class="form-group toggle-group">
-                        <label>POP UP CONTACT PAGE</label>
-                        <label class="switch">
-                            <input type="checkbox" id="popupToggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
+                    <div class="form-group"><label>WhatsApp</label><input type="tel" id="whatsappNumber"></div>
+                    <div class="form-group"><label>Telegram</label><input type="text" id="telegramUsername"></div>
+                    <div class="form-group"><label>YouTube</label><input type="url" id="youtubeLink"></div>
+                    <div class="form-group toggle-group"><label>POP UP CONTACT</label><label class="switch"><input type="checkbox" id="popupToggle"><span class="slider"></span></label></div>
                 </div>
             </div>
-
             <div class="builder-section">
                 <h2 class="builder-section-title"><i class="fas fa-palette"></i> Select Theme</h2>
                 <div class="themes-grid" id="themesGrid"></div>
             </div>
-
             <div class="builder-section generate-section">
-                <button class="generate-btn" onclick="generateToolkit()">
-                    <i class="fas fa-rocket"></i> CREATE MY TOOLKIT
-                </button>
-                <div class="generation-progress" id="generationProgress" style="display:none;">
-                    <div class="progress-steps" id="progressSteps"></div>
-                </div>
+                <button class="generate-btn" onclick="generateToolkit()"><i class="fas fa-rocket"></i> CREATE MY TOOLKIT</button>
+                <div class="generation-progress" id="generationProgress" style="display:none;"><div class="progress-steps" id="progressSteps"></div></div>
             </div>
         </div>
-
         <div class="generated-output" id="generatedOutput" style="display:none;">
             <div class="code-header">
-                <div class="code-title">
-                    <i class="fas fa-code"></i> Your Website Code
-                </div>
+                <div class="code-title"><i class="fas fa-code"></i> Code</div>
                 <div class="code-actions">
-                    <button class="code-btn run-btn" onclick="runToolkit()">
-                        <i class="fas fa-play"></i> Run
-                    </button>
-                    <button class="code-btn copy-btn" onclick="copyCode()">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                    <button class="code-btn download-btn" onclick="downloadCode()">
-                        <i class="fas fa-download"></i> Download
-                    </button>
+                    <button class="code-btn run-btn" onclick="runToolkit()">Run</button>
+                    <button class="code-btn copy-btn" onclick="copyCode()">Copy</button>
+                    <button class="code-btn download-btn" onclick="downloadCode()">Download</button>
                 </div>
             </div>
             <textarea id="generatedCode" class="code-box" readonly></textarea>
         </div>
     </main>
 
-    <!-- Protected Access Required -->
-    <div class="protected-access" id="protectedAccess" style="display: none;">
+    <!-- Protected Access -->
+    <div class="protected-access" id="protectedAccess" style="display:none;">
         <div class="protected-box">
-            <div class="protected-icon">
-                <i class="fas fa-lock"></i>
-            </div>
+            <div class="protected-icon"><i class="fas fa-lock"></i></div>
             <h2>Access Required</h2>
-            <p>Please login to access the Toolkit Maker</p>
+            <p>Login required + 20 credits</p>
             <div class="protected-actions">
-                <button class="btn-primary" onclick="openAuthModal('login')">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
-                <button class="btn-secondary" onclick="openAuthModal('register')">
-                    <i class="fas fa-user-plus"></i> Create Account
-                </button>
+                <button class="btn-primary" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
+                <button class="btn-secondary" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
             </div>
         </div>
     </div>
 
     <!-- Auth Modal -->
-    <div class="modal-overlay" id="authModal" style="display: none;">
+    <div class="modal-overlay" id="authModal" style="display:none;">
         <div class="modal-box auth-modal">
             <button class="modal-close" onclick="closeAuthModal()">&times;</button>
-            <div class="modal-header">
-                <h2 id="authModalTitle">Login</h2>
-                <p id="authModalSubtitle">Access your account</p>
-            </div>
-            
-            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <button type="submit" class="auth-submit-btn" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
-                <p class="auth-switch">
-                    Don't have an account? 
-                    <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
-                </p>
+            <div class="modal-header"><h2 id="authModalTitle">Login</h2></div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group"><label>Email</label><input type="email" id="loginEmail" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
+                <button type="submit" class="auth-submit-btn" id="loginBtn">Login</button>
+                <p class="auth-switch">No account? <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register</a></p>
             </form>
-            
-            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label><i class="fas fa-user"></i> Display Name</label>
-                    <input type="text" id="registerName" placeholder="Enter your name" required>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email</label>
-                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
-                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Confirm Password</label>
-                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
-                    <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <button type="submit" class="auth-submit-btn" id="registerBtn">
-                    <i class="fas fa-user-plus"></i> Create Account
-                </button>
-                <p class="auth-switch">
-                    Already have an account? 
-                    <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
-                </p>
+            <form id="registerForm" style="display:none;" onsubmit="handleRegister(event)">
+                <div class="form-group"><label>Name</label><input type="text" id="registerName" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="registerEmail" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="registerPassword" required minlength="6"></div>
+                <button type="submit" class="auth-submit-btn" id="registerBtn">Create Account</button>
+                <p class="auth-switch">Have account? <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login</a></p>
             </form>
         </div>
     </div>
 
-    <!-- Insufficient Credits Modal -->
-    <div class="modal-overlay" id="insufficientModal" style="display: none;">
-        <div class="modal-box insufficient-modal">
+    <!-- Insufficient Credits -->
+    <div class="modal-overlay" id="insufficientModal" style="display:none;">
+        <div class="modal-box">
             <button class="modal-close" onclick="closeInsufficientModal()">&times;</button>
-            <div class="modal-header">
-                <div class="insufficient-icon">
-                    <i class="fas fa-coins"></i>
-                </div>
-                <h2>Insufficient Credits</h2>
-                <p>You need 20 credits to access Toolkit Maker</p>
-            </div>
+            <div class="modal-header"><h2>Insufficient Credits</h2><p>20 credits required</p></div>
             <div class="credits-info">
-                <div class="credit-row">
-                    <span>Current Credits:</span>
-                    <strong id="currentCreditsDisplay">0</strong>
-                </div>
-                <div class="credit-row">
-                    <span>Required Credits:</span>
-                    <strong id="requiredCreditsDisplay">20</strong>
-                </div>
+                <div class="credit-row"><span>Your Credits:</span><strong id="currentCreditsDisplay">0</strong></div>
+                <div class="credit-row"><span>Required:</span><strong>20</strong></div>
             </div>
             <div class="modal-actions">
-                <button class="buy-credits-btn" onclick="goToBuyCredits()">
-                    <i class="fas fa-shopping-cart"></i> Buy Credits
-                </button>
+                <button class="buy-credits-btn" onclick="window.location.href='buy-credits.html'"><i class="fas fa-shopping-cart"></i> Buy Credits</button>
                 <button class="close-modal-btn" onclick="closeInsufficientModal()">Close</button>
             </div>
         </div>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
-
     <div class="preview-modal" id="previewModal" style="display:none;">
-        <div class="preview-modal-header">
-            <span>Toolkit Preview</span>
-            <button onclick="closePreview()"><i class="fas fa-times"></i></button>
-        </div>
+        <div class="preview-modal-header"><span>Preview</span><button onclick="closePreview()"><i class="fas fa-times"></i></button></div>
         <iframe id="previewFrame" class="preview-frame"></iframe>
     </div>
 
@@ -385,94 +219,84 @@
     <script src="js/credits.js"></script>
     
     <script>
-        let currentUser = null;
-        let currentUserData = null;
-        
+        // ============ TOOLKIT ACCESS CONTROL ============
         auth.onAuthStateChanged(function(user) {
+            const mainContent = document.getElementById('toolkitMainContent');
+            const protectedAccess = document.getElementById('protectedAccess');
+            
             if (user) {
-                currentUser = user;
-                loadUserData(user);
-                checkToolkitMakerAccess();
+                document.getElementById('guestButtons').style.display = 'none';
+                document.getElementById('userLoggedIn').style.display = 'flex';
+                
+                db.collection('users').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        document.getElementById('navUserName').textContent = data.displayName || 'Account';
+                        document.getElementById('navCredits').textContent = data.credits || 0;
+                        
+                        // ACCOUNT DISABLED
+                        if (data.accountStatus === 'disabled') {
+                            mainContent.style.display = 'none';
+                            protectedAccess.style.display = 'none';
+                            showToast('Account disabled!', 'error');
+                            return;
+                        }
+                        
+                        // CHECK CREDITS
+                        if ((data.credits || 0) < 20) {
+                            mainContent.style.display = 'none';
+                            protectedAccess.style.display = 'none';
+                            document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
+                            document.getElementById('insufficientModal').style.display = 'flex';
+                            return;
+                        }
+                        
+                        // DEDUCT 20 CREDITS
+                        const userRef = db.collection('users').doc(user.uid);
+                        db.runTransaction((tx) => {
+                            return tx.get(userRef).then((doc) => {
+                                const credits = doc.data().credits || 0;
+                                if (credits < 20) throw new Error('Insufficient credits');
+                                const newCredits = credits - 20;
+                                tx.update(userRef, { credits: newCredits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                return newCredits;
+                            });
+                        }).then((newCredits) => {
+                            // OPEN TOOLKIT
+                            mainContent.style.display = 'block';
+                            protectedAccess.style.display = 'none';
+                            document.getElementById('navCredits').textContent = newCredits;
+                            showToast('20 credits deducted!', 'success');
+                        }).catch((error) => {
+                            mainContent.style.display = 'none';
+                            document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
+                            document.getElementById('insufficientModal').style.display = 'flex';
+                        });
+                        
+                    } else {
+                        // CREATE USER DOC
+                        db.collection('users').doc(user.uid).set({
+                            uid: user.uid,
+                            displayName: user.displayName || 'User',
+                            email: user.email,
+                            credits: 0,
+                            accountStatus: 'active',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }).then(() => {
+                            mainContent.style.display = 'none';
+                            document.getElementById('currentCreditsDisplay').textContent = '0';
+                            document.getElementById('insufficientModal').style.display = 'flex';
+                        });
+                    }
+                });
             } else {
-                currentUser = null;
-                currentUserData = null;
-                showGuestState();
-                showProtectedAccess();
+                // NOT LOGGED IN
+                mainContent.style.display = 'none';
+                protectedAccess.style.display = 'flex';
+                document.getElementById('guestButtons').style.display = 'flex';
+                document.getElementById('userLoggedIn').style.display = 'none';
             }
         });
-        
-        function checkToolkitMakerAccess() {
-            const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
-            const mainContent = document.getElementById('toolkitMainContent');
-            const protectedAccess = document.getElementById('protectedAccess');
-            
-            db.collection('users').doc(currentUser.uid).get().then((doc) => {
-                if (doc.exists) {
-                    currentUserData = doc.data();
-                    
-                    if (currentUserData.accountStatus === 'disabled') {
-                        if (loadingOverlay) loadingOverlay.style.display = 'none';
-                        if (mainContent) mainContent.style.display = 'none';
-                        showToast('Your account is disabled', 'error');
-                        return;
-                    }
-                    
-                    if (currentUserData.credits < 20) {
-                        if (loadingOverlay) loadingOverlay.style.display = 'none';
-                        if (mainContent) mainContent.style.display = 'none';
-                        showInsufficientCredits(20);
-                        return;
-                    }
-                    
-                    // Deduct 20 credits
-                    const userRef = db.collection('users').doc(currentUser.uid);
-                    
-                    db.runTransaction((transaction) => {
-                        return transaction.get(userRef).then((doc) => {
-                            if (!doc.exists) throw new Error('User not found');
-                            
-                            const userData = doc.data();
-                            const currentCredits = userData.credits || 0;
-                            
-                            if (currentCredits < 20) throw new Error('Insufficient credits');
-                            
-                            const newCredits = currentCredits - 20;
-                            transaction.update(userRef, {
-                                credits: newCredits,
-                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                            
-                            return newCredits;
-                        });
-                    }).then((newCredits) => {
-                        if (loadingOverlay) loadingOverlay.style.display = 'none';
-                        if (mainContent) mainContent.style.display = 'block';
-                        if (protectedAccess) protectedAccess.style.display = 'none';
-                        
-                        const navCredits = document.getElementById('navCredits');
-                        if (navCredits) navCredits.textContent = newCredits;
-                        
-                        showToast('20 credits deducted! Toolkit Maker unlocked!', 'success');
-                    }).catch((error) => {
-                        if (loadingOverlay) loadingOverlay.style.display = 'none';
-                        showToast(error.message, 'error');
-                    });
-                }
-            }).catch((error) => {
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
-                showToast('Error: ' + error.message, 'error');
-            });
-        }
-        
-        function showProtectedAccess() {
-            const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
-            const mainContent = document.getElementById('toolkitMainContent');
-            const protectedAccess = document.getElementById('protectedAccess');
-            
-            if (loadingOverlay) loadingOverlay.style.display = 'none';
-            if (mainContent) mainContent.style.display = 'none';
-            if (protectedAccess) protectedAccess.style.display = 'flex';
-        }
     </script>
 </body>
 </html>
