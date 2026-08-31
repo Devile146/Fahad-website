@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/account.css">
     
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -24,6 +25,7 @@
             messagingSenderId: "487340113323",
             appId: "1:487340113323:web:6c0923e8c95b4064e5a6ee"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -34,6 +36,7 @@
     <div class="bg-glow-purple"></div>
     <div class="bg-glow-blue"></div>
 
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="nav-logo">
@@ -54,18 +57,33 @@
             <div class="nav-right">
                 <div class="user-account-area" id="userAccountArea">
                     <div class="guest-buttons" id="guestButtons">
-                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
-                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
+                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
                     </div>
-                    <div class="user-logged-in" id="userLoggedIn" style="display:none;">
-                        <div class="user-credits-display"><i class="fas fa-coins"></i><span id="navCredits">0</span><span class="credits-label">Credits</span></div>
+                    <div class="user-logged-in" id="userLoggedIn" style="display: none;">
+                        <div class="user-credits-display">
+                            <i class="fas fa-coins"></i>
+                            <span id="navCredits">0</span>
+                            <span class="credits-label">Credits</span>
+                        </div>
                         <div class="user-profile-menu">
-                            <button class="profile-btn" onclick="goToAccount()"><i class="fas fa-user-circle"></i><span id="navUserName">Account</span></button>
-                            <button class="logout-btn" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i></button>
+                            <button class="profile-btn" onclick="goToAccount()">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="navUserName">Account</span>
+                            </button>
+                            <button class="logout-btn" onclick="logoutUser()">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
-                <button class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></button>
+                <button class="hamburger" id="hamburgerBtn">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </div>
         <div class="mobile-menu" id="mobileMenu">
@@ -79,6 +97,7 @@
         </div>
     </nav>
 
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-inner">
             <a href="index.html" class="sidebar-link"><i class="fas fa-home"></i><span>Home</span></a>
@@ -95,135 +114,275 @@
         </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content account-main">
         <div class="page-header">
             <h1 class="page-title">My <span class="gradient-text">Account</span></h1>
             <p class="page-description">Manage your profile and credits</p>
         </div>
 
-        <div id="accountContent" style="display:block;">
+        <!-- Account Loading -->
+        <div id="accountLoading" class="account-loading">
+            <div class="loading-spinner"></div>
+            <p>Loading your account...</p>
+        </div>
+
+        <!-- Account Content -->
+        <div id="accountContent" style="display: none;">
             <div class="account-grid">
+                <!-- Profile Card -->
                 <div class="account-card profile-card">
-                    <div class="account-card-header"><i class="fas fa-user-circle"></i><h3>Profile</h3></div>
-                    <div class="profile-avatar"><i class="fas fa-user"></i></div>
+                    <div class="account-card-header">
+                        <i class="fas fa-user-circle"></i>
+                        <h3>Profile</h3>
+                    </div>
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
                     <h2 id="accountName" class="account-name">User</h2>
                     <p id="accountEmail" class="account-email">email@example.com</p>
-                    <div class="account-status" id="accountStatus"><span class="status-dot"></span><span>Active</span></div>
+                    <div class="account-status" id="accountStatus">
+                        <span class="status-dot"></span>
+                        <span>Active</span>
+                    </div>
                 </div>
+
+                <!-- Credits Card -->
                 <div class="account-card credits-card">
-                    <div class="account-card-header"><i class="fas fa-coins"></i><h3>Credits</h3></div>
-                    <div class="credits-amount"><i class="fas fa-coins"></i><span id="accountCredits">0</span></div>
+                    <div class="account-card-header">
+                        <i class="fas fa-coins"></i>
+                        <h3>Credits</h3>
+                    </div>
+                    <div class="credits-amount">
+                        <i class="fas fa-coins"></i>
+                        <span id="accountCredits">0</span>
+                    </div>
                     <p class="credits-label">Available Credits</p>
-                    <button class="buy-more-btn" onclick="window.location.href='buy-credits.html'"><i class="fas fa-shopping-cart"></i> Buy More Credits</button>
+                    <button class="buy-more-btn" onclick="window.location.href='buy-credits.html'">
+                        <i class="fas fa-shopping-cart"></i> Buy More Credits
+                    </button>
                 </div>
+
+                <!-- Member Since Card -->
                 <div class="account-card member-card">
-                    <div class="account-card-header"><i class="fas fa-calendar"></i><h3>Member Since</h3></div>
-                    <div class="member-date"><i class="fas fa-clock"></i><span id="memberSince">Loading...</span></div>
+                    <div class="account-card-header">
+                        <i class="fas fa-calendar"></i>
+                        <h3>Member Since</h3>
+                    </div>
+                    <div class="member-date">
+                        <i class="fas fa-clock"></i>
+                        <span id="memberSince">Loading...</span>
+                    </div>
                 </div>
             </div>
+
+            <!-- Quick Actions -->
             <div class="quick-actions">
                 <h3>Quick Actions</h3>
                 <div class="actions-grid">
-                    <a href="tools.html" class="action-card"><i class="fas fa-tools"></i><span>Browse Tools</span></a>
-                    <a href="toolkit-maker.html" class="action-card"><i class="fas fa-magic"></i><span>Toolkit Maker</span></a>
-                    <a href="buy-credits.html" class="action-card"><i class="fas fa-coins"></i><span>Buy Credits</span></a>
-                    <button class="action-card logout-action" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+                    <a href="tools.html" class="action-card">
+                        <i class="fas fa-tools"></i>
+                        <span>Browse Tools</span>
+                    </a>
+                    <a href="toolkit-maker.html" class="action-card">
+                        <i class="fas fa-magic"></i>
+                        <span>Toolkit Maker</span>
+                    </a>
+                    <a href="buy-credits.html" class="action-card">
+                        <i class="fas fa-coins"></i>
+                        <span>Buy Credits</span>
+                    </a>
+                    <button class="action-card logout-action" onclick="logoutUser()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div id="loginRequired" style="display:none;">
+        <!-- Login Required -->
+        <div id="loginRequired" style="display: none;">
             <div class="protected-box">
-                <div class="protected-icon"><i class="fas fa-lock"></i></div>
+                <div class="protected-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
                 <h2>Login Required</h2>
                 <p>Please login to view your account</p>
                 <div class="protected-actions">
-                    <button class="btn-primary" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
-                    <button class="btn-secondary" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
+                    <button class="btn-primary" onclick="openAuthModal('login')">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn-secondary" onclick="openAuthModal('register')">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
                 </div>
             </div>
         </div>
     </main>
 
-    <div class="modal-overlay" id="authModal" style="display:none;">
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal" style="display: none;">
         <div class="modal-box auth-modal">
             <button class="modal-close" onclick="closeAuthModal()">&times;</button>
-            <div class="modal-header"><h2 id="authModalTitle">Login</h2><p id="authModalSubtitle">Access your account</p></div>
+            <div class="modal-header">
+                <h2 id="authModalTitle">Login</h2>
+                <p id="authModalSubtitle">Access your account</p>
+            </div>
             <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
-                <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input type="email" id="loginEmail" required></div>
-                <div class="form-group"><label><i class="fas fa-lock"></i> Password</label><input type="password" id="loginPassword" required></div>
-                <button type="submit" class="auth-submit-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
-                <p class="auth-switch">Don't have an account? <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a></p>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
+                </p>
             </form>
-            <form id="registerForm" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
-                <div class="form-group"><label><i class="fas fa-user"></i> Display Name</label><input type="text" id="registerName" required></div>
-                <div class="form-group"><label><i class="fas fa-envelope"></i> Email</label><input type="email" id="registerEmail" required></div>
-                <div class="form-group"><label><i class="fas fa-lock"></i> Password</label><input type="password" id="registerPassword" required minlength="6"></div>
-                <div class="form-group"><label><i class="fas fa-lock"></i> Confirm Password</label><input type="password" id="registerConfirmPassword" required minlength="6"></div>
-                <button type="submit" class="auth-submit-btn" id="registerBtn"><i class="fas fa-user-plus"></i> Create Account</button>
-                <p class="auth-switch">Already have an account? <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a></p>
+            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Display Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <p class="auth-switch">
+                    Already have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
+                </p>
             </form>
         </div>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="js/script.js"></script>
+    < srcscript="js/script.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/credits.js"></script>
     <script>
+        let currentUser = null;
+        let currentUserData = null;
+        
+        // SAFETY: Force hide loading after 3 seconds
+        setTimeout(function() {
+            const loadingEl = document.getElementById('accountLoading');
+            if (loadingEl) loadingEl.style.display = 'none';
+        }, 3000);
+        
         auth.onAuthStateChanged(function(user) {
+            const loadingEl = document.getElementById('accountLoading');
+            const contentEl = document.getElementById('accountContent');
+            const loginRequiredEl = document.getElementById('loginRequired');
+            
             if (user) {
+                currentUser = user;
+                
+                // Navbar update
                 document.getElementById('guestButtons').style.display = 'none';
                 document.getElementById('userLoggedIn').style.display = 'flex';
                 
                 db.collection('users').doc(user.uid).get().then((doc) => {
+                    // HIDE LOADING - GUARANTEED
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    
                     if (doc.exists) {
-                        const data = doc.data();
-                        document.getElementById('accountName').textContent = data.displayName || 'User';
-                        document.getElementById('accountEmail').textContent = data.email || '';
-                        document.getElementById('accountCredits').textContent = data.credits || 0;
-                        document.getElementById('navUserName').textContent = data.displayName || 'Account';
-                        document.getElementById('navCredits').textContent = data.credits || 0;
+                        currentUserData = doc.data();
                         
-                        const statusEl = document.getElementById('accountStatus');
-                        if (data.accountStatus === 'disabled') {
-                            statusEl.innerHTML = '<span class="status-dot disabled"></span><span>Disabled</span>';
+                        // SHOW CONTENT
+                        if (contentEl) contentEl.style.display = 'block';
+                        if (loginRequiredEl) loginRequiredEl.style.display = 'none';
+                        
+                        // Fill data
+                        document.getElementById('accountName').textContent = currentUserData.displayName || 'User';
+                        document.getElementById('accountEmail').textContent = currentUserData.email || '';
+                        document.getElementById('accountCredits').textContent = currentUserData.credits || 0;
+                        
+                        const statusElement = document.getElementById('accountStatus');
+                        if (currentUserData.accountStatus === 'disabled') {
+                            statusElement.innerHTML = '<span class="status-dot disabled"></span><span>Disabled</span>';
                         } else {
-                            statusEl.innerHTML = '<span class="status-dot active"></span><span>Active</span>';
+                            statusElement.innerHTML = '<span class="status-dot active"></span><span>Active</span>';
                         }
                         
-                        if (data.createdAt && data.createdAt.toDate) {
+                        if (currentUserData.createdAt) {
                             try {
-                                document.getElementById('memberSince').textContent = data.createdAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                            } catch(e) { document.getElementById('memberSince').textContent = 'N/A'; }
+                                const date = currentUserData.createdAt.toDate();
+                                document.getElementById('memberSince').textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                            } catch(e) {
+                                document.getElementById('memberSince').textContent = 'N/A';
+                            }
                         }
+                        
+                        document.getElementById('navUserName').textContent = currentUserData.displayName || 'Account';
+                        document.getElementById('navCredits').textContent = currentUserData.credits || 0;
+                        
                     } else {
+                        // Create user doc
                         db.collection('users').doc(user.uid).set({
                             uid: user.uid,
                             displayName: user.displayName || 'User',
                             email: user.email,
                             credits: 0,
                             accountStatus: 'active',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         }).then(() => {
+                            if (contentEl) contentEl.style.display = 'block';
+                            if (loginRequiredEl) loginRequiredEl.style.display = 'none';
+                            
                             document.getElementById('accountName').textContent = user.displayName || 'User';
                             document.getElementById('accountEmail').textContent = user.email || '';
                             document.getElementById('accountCredits').textContent = '0';
                             document.getElementById('accountStatus').innerHTML = '<span class="status-dot active"></span><span>Active</span>';
                             document.getElementById('memberSince').textContent = 'Just Now';
+                            
                             document.getElementById('navUserName').textContent = user.displayName || 'Account';
                             document.getElementById('navCredits').textContent = '0';
                         });
                     }
+                }).catch((error) => {
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    console.error("Error:", error);
                 });
+                
             } else {
-                document.getElementById('accountContent').style.display = 'none';
-                document.getElementById('loginRequired').style.display = 'flex';
+                // LOGGED OUT
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (contentEl) contentEl.style.display = 'none';
+                if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
+                
                 document.getElementById('guestButtons').style.display = 'flex';
                 document.getElementById('userLoggedIn').style.display = 'none';
             }
         });
     </script>
 </body>
-                </html>
+                        </html>
