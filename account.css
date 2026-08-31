@@ -1,0 +1,277 @@
+/* =========================
+   ACCOUNT PAGE STYLES
+========================= */
+
+.account-main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 90px 20px 40px;
+}
+
+.account-loading {
+    text-align: center;
+    padding: 50px;
+}
+
+.account-loading .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #6D5CFF;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.account-loading p {
+    font-size: 12px;
+    color: #fff;
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.account-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+.account-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.account-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.account-card-header i {
+    font-size: 18px;
+    color: #FFD700;
+}
+
+.account-card-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(109, 92, 255, 0.2);
+    border: 2px solid rgba(109, 92, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 30px;
+    color: #6D5CFF;
+}
+
+.account-name {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #FFD700, #FF4D91);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+.account-email {
+    font-size: 11px;
+    color: #fff;
+    opacity: 0.8;
+    margin-bottom: 10px;
+}
+
+.account-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(74, 222, 128, 0.15);
+    font-size: 10px;
+    font-weight: 600;
+    color: #4ade80;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.disabled {
+    background: #FF4D91;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.credits-amount {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.credits-amount i {
+    font-size: 30px;
+    color: #FFD700;
+}
+
+.credits-amount span {
+    font-size: 40px;
+    font-weight: 900;
+    color: #FFD700;
+    text-shadow: none;
+}
+
+.credits-label {
+    font-size: 10px;
+    color: #fff;
+    opacity: 0.7;
+    margin-bottom: 15px;
+}
+
+.buy-more-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #FFD700, #FF8C42);
+    border-radius: 8px;
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.buy-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+.member-date {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.member-date i {
+    font-size: 20px;
+    color: #00d4ff;
+}
+
+.quick-actions {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.quick-actions h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.action-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(109, 92, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.action-card i {
+    font-size: 20px;
+    color: #6D5CFF;
+}
+
+.action-card span {
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.logout-action i {
+    color: #FF4D91;
+}
+
+@media (max-width: 480px) {
+    .account-main {
+        padding: 60px 8px 20px;
+    }
+    
+    .account-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .account-card {
+        padding: 15px;
+    }
+    
+    .credits-amount span {
+        font-size: 30px;
+    }
+    
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+}
