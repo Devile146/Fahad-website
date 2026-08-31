@@ -155,130 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // =========================
-// AUTHENTICATION CHECK
-// =========================
-
-function checkToolkitMakerAccess() {
-    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
-    const mainContent = document.getElementById('toolkitMainContent');
-    const protectedAccess = document.getElementById('protectedAccess');
-    const loadingText = document.getElementById('loadingText');
-    
-    if (!currentUser) {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'none';
-        if (protectedAccess) protectedAccess.style.display = 'flex';
-        return;
-    }
-    
-    // Check account status
-    if (currentUserData && currentUserData.accountStatus === 'disabled') {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'none';
-        if (protectedAccess) {
-            protectedAccess.innerHTML = `
-                <div class="protected-box">
-                    <div class="protected-icon">
-                        <i class="fas fa-ban"></i>
-                    </div>
-                    <h2>Account Disabled</h2>
-                    <p>Your account is currently disabled. Please contact support.</p>
-                </div>
-            `;
-            protectedAccess.style.display = 'flex';
-        }
-        return;
-    }
-    
-    // Check credits
-    if (!currentUserData || currentUserData.credits < 20) {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'none';
-        if (protectedAccess) protectedAccess.style.display = 'none';
-        
-        showInsufficientCredits(20);
-        return;
-    }
-    
-    // Deduct 20 credits for access
-    if (loadingText) loadingText.textContent = 'Deducting 20 credits...';
-    
-    deductCreditsForToolkit().then(() => {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'block';
-        if (protectedAccess) protectedAccess.style.display = 'none';
-        showToast('20 credits deducted for Toolkit Maker access', 'success');
-    }).catch((error) => {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'none';
-        if (protectedAccess) protectedAccess.style.display = 'none';
-        showToast(error.message, 'error');
-    });
-}
-
-function deductCreditsForToolkit() {
-    const userRef = db.collection('users').doc(currentUser.uid);
-    
-    return db.runTransaction((transaction) => {
-        return transaction.get(userRef).then((doc) => {
-            if (!doc.exists) {
-                throw new Error('User data not found');
-            }
-            
-            const userData = doc.data();
-            const currentCredits = userData.credits || 0;
-            
-            if (userData.accountStatus === 'disabled') {
-                throw new Error('Account is disabled');
-            }
-            
-            if (currentCredits < 20) {
-                throw new Error('Insufficient credits');
-            }
-            
-            const newCredits = currentCredits - 20;
-            
-            transaction.update(userRef, {
-                credits: newCredits,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Log transaction
-            const transactionLog = {
-                userId: currentUser.uid,
-                action: 'toolkit_maker_access',
-                details: 'Toolkit Maker access',
-                amount: -20,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('transactions').add(transactionLog);
-            
-            return newCredits;
-        });
-    }).then((newCredits) => {
-        if (currentUserData) {
-            currentUserData.credits = newCredits;
-        }
-        const navCredits = document.getElementById('navCredits');
-        if (navCredits) {
-            navCredits.textContent = newCredits;
-        }
-        return newCredits;
-    });
-}
-
-function showProtectedAccess() {
-    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
-    const mainContent = document.getElementById('toolkitMainContent');
-    const protectedAccess = document.getElementById('protectedAccess');
-    
-    if (loadingOverlay) loadingOverlay.style.display = 'none';
-    if (mainContent) mainContent.style.display = 'none';
-    if (protectedAccess) protectedAccess.style.display = 'flex';
-}
-
-// =========================
 // RENDER THEMES
 // =========================
 
@@ -443,7 +319,6 @@ function generateToolkit() {
     
     isGenerating = true;
     
-    // Show generation progress
     const progressDiv = document.getElementById('generationProgress');
     progressDiv.style.display = 'block';
     
@@ -464,7 +339,6 @@ function generateToolkit() {
         </div>
     `).join('');
     
-    // Simulate progress
     let stepIndex = 0;
     const interval = setInterval(() => {
         const steps = progressSteps.querySelectorAll('.progress-step');
@@ -500,7 +374,6 @@ function buildToolkitCode() {
     const theme = themes.find(t => t.id === selectedTheme) || themes[3];
     const profileImg = profileImageData || 'https://via.placeholder.com/150';
     
-    // Build products HTML
     const productsHTML = products.map((product, index) => {
         const isFree = product.type === 'free';
         const buttonAction = isFree 
@@ -516,7 +389,6 @@ function buildToolkitCode() {
         </div>`;
     }).join('');
     
-    // Build contact HTML
     const contactButtons = [];
     if (whatsapp) {
         const cleanNumber = whatsapp.replace(/[^0-9]/g, '');
@@ -536,7 +408,6 @@ function buildToolkitCode() {
         <div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap;">${contactButtons.join('')}</div>
     </div>` : '';
     
-    // Popup HTML
     const popupHTML = popupEnabled && contactButtons.length > 0 ? `
     <div id="welcomePopup" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${theme.cardBg};backdrop-filter:blur(20px);border:1px solid ${theme.accent}40;border-radius:20px;padding:30px;text-align:center;z-index:1000;box-shadow:0 25px 50px rgba(0,0,0,0.3);">
         <h3 style="color:${theme.textColor};margin-bottom:10px;">Welcome to ${toolkitName}! 🎉</h3>
@@ -545,7 +416,6 @@ function buildToolkitCode() {
         <button onclick="document.getElementById('welcomePopup').style.display='none'" style="background:${theme.accent};color:#000;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
     </div>` : '';
     
-    // Full generated code
     const fullCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -563,58 +433,15 @@ function buildToolkitCode() {
             min-height: 100vh;
             overflow-x: hidden;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            padding: 40px 20px;
-        }
-        .profile-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid ${theme.accent};
-            box-shadow: 0 0 30px ${theme.accent}40;
-            animation: pulse 3s ease-in-out infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-        }
-        .about-text {
-            font-size: 1rem;
-            opacity: 0.8;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 40px;
-        }
-        .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        }
-        footer {
-            text-align: center;
-            padding: 30px;
-            margin-top: 40px;
-            border-top: 1px solid ${theme.accent}20;
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 40px 20px; }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid ${theme.accent}; box-shadow: 0 0 30px ${theme.accent}40; animation: pulse 3s ease-in-out infinite; margin-bottom: 20px; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
+        .about-text { font-size: 1rem; opacity: 0.8; max-width: 600px; margin: 0 auto; }
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
+        .tool-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        footer { text-align: center; padding: 30px; margin-top: 40px; border-top: 1px solid ${theme.accent}20; font-size: 0.9rem; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -625,90 +452,11 @@ function buildToolkitCode() {
             <h1>${toolkitName}</h1>
             ${toolkitAbout ? `<p class="about-text">${toolkitAbout}</p>` : ''}
         </div>
-        <div class="tools-grid">
-            ${productsHTML}
-        </div>
+        <div class="tools-grid">${productsHTML}</div>
         ${contactHTML}
-        <footer>
-            © 2026 ${toolkitName}. All Rights Reserved.
-        </footer>
+        <footer>© 2026 ${toolkitName}. All Rights Reserved.</footer>
     </div>
 </body>
-// TOOLKIT MAKER ACCESS CHECK
-let currentUser = null;
-let currentUserData = null;
-
-auth.onAuthStateChanged(function(user) {
-    if (user) {
-        currentUser = user;
-        db.collection('users').doc(user.uid).get().then((doc) => {
-            if (doc.exists) {
-                currentUserData = doc.data();
-                checkToolkitAccess();
-            }
-        });
-    } else {
-        showLoginRequired();
-    }
-});
-
-function checkToolkitAccess() {
-    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
-    const mainContent = document.getElementById('toolkitMainContent');
-    const protectedAccess = document.getElementById('protectedAccess');
-    
-    if (!currentUserData) {
-        showLoginRequired();
-        return;
-    }
-    
-    if (currentUserData.accountStatus === 'disabled') {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'none';
-        showToast('Account disabled', 'error');
-        return;
-    }
-    
-    if (currentUserData.credits < 20) {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'none';
-        showInsufficientCredits(20);
-        return;
-    }
-    
-    // Deduct 20 credits
-    const userRef = db.collection('users').doc(currentUser.uid);
-    
-    db.runTransaction((transaction) => {
-        return transaction.get(userRef).then((doc) => {
-            if (!doc.exists) throw new Error('User not found');
-            const data = doc.data();
-            if ((data.credits || 0) < 20) throw new Error('Insufficient credits');
-            const newCredits = (data.credits || 0) - 20;
-            transaction.update(userRef, { credits: newCredits });
-            return newCredits;
-        });
-    }).then((newCredits) => {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        if (mainContent) mainContent.style.display = 'block';
-        if (protectedAccess) protectedAccess.style.display = 'none';
-        document.getElementById('navCredits').textContent = newCredits;
-        showToast('20 credits deducted!', 'success');
-    }).catch((error) => {
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
-        showToast(error.message, 'error');
-    });
-}
-
-function showLoginRequired() {
-    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
-    const mainContent = document.getElementById('toolkitMainContent');
-    const protectedAccess = document.getElementById('protectedAccess');
-    
-    if (loadingOverlay) loadingOverlay.style.display = 'none';
-    if (mainContent) mainContent.style.display = 'none';
-    if (protectedAccess) protectedAccess.style.display = 'flex';
-}
 </html>`;
     
     return fullCode;
@@ -727,7 +475,6 @@ function runToolkit() {
     const code = document.getElementById('generatedCode').value;
     const previewModal = document.getElementById('previewModal');
     const previewFrame = document.getElementById('previewFrame');
-    
     previewModal.style.display = 'flex';
     previewFrame.srcdoc = code;
 }
@@ -742,7 +489,6 @@ function copyCode() {
     const codeBox = document.getElementById('generatedCode');
     codeBox.select();
     codeBox.setSelectionRange(0, 99999);
-    
     navigator.clipboard.writeText(codeBox.value).then(() => {
         showToast('Code copied successfully!', 'success');
     }).catch(() => {
@@ -756,7 +502,6 @@ function downloadCode() {
     const code = document.getElementById('generatedCode').value;
     const toolkitName = document.getElementById('toolkitName').value.trim() || 'toolkit';
     const filename = toolkitName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.html';
-    
     const blob = new Blob([code], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -764,6 +509,5 @@ function downloadCode() {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    
     showToast('Toolkit downloaded successfully!', 'success');
-}
+                            }
