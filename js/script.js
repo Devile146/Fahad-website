@@ -1,5 +1,5 @@
 // =========================
-// FAHAD TECH - MAIN SCRIPT (FULL COMPLETE)
+// FAHAD TECH - MAIN SCRIPT
 // =========================
 
 // Configuration
@@ -24,312 +24,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize tools if on tools page
     if (document.getElementById('toolsGrid')) {
-        loadToolsFromFirestore().then(() => {
+        if (typeof loadToolsFromFirestore === 'function') {
+            loadToolsFromFirestore().then(() => {
+                renderTools('all');
+                checkUrlCategory();
+            }).catch(() => {
+                renderTools('all');
+                checkUrlCategory();
+            });
+        } else {
             renderTools('all');
             checkUrlCategory();
-        }).catch(() => {
-            renderTools('all');
-            checkUrlCategory();
-        });
+        }
     }
 });
-
-// =========================
-// AUTHENTICATION FUNCTIONS
-// =========================
-
-// Initialize Auth State
-function initAuthState() {
-    if (typeof auth === 'undefined') return;
-    
-    auth.onAuthStateChanged(function(user) {
-        if (user) {
-            currentUser = user;
-            loadUserData(user);
-        } else {
-            currentUser = null;
-            currentUserData = null;
-            showGuestState();
-        }
-    });
-}
-
-// Load User Data from Firestore
-function loadUserData(user) {
-    db.collection('users').doc(user.uid).get().then((doc) => {
-        if (doc.exists) {
-            currentUserData = doc.data();
-            updateUserUI(user, currentUserData);
-        } else {
-            createUserDocument(user);
-        }
-    }).catch((error) => {
-        console.error("Error loading user data:", error);
-        showToast('Error loading user data', 'error');
-    });
-}
-
-// Create User Document
-function createUserDocument(user) {
-    const userData = {
-        uid: user.uid,
-        displayName: user.displayName || 'User',
-        email: user.email,
-        credits: 0,
-        accountStatus: 'active',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('users').doc(user.uid).set(userData).then(() => {
-        currentUserData = userData;
-        updateUserUI(user, userData);
-        showToast('Welcome to Fahad Tech!', 'success');
-    }).catch((error) => {
-        console.error("Error creating user document:", error);
-    });
-}
-
-// Update User UI
-function updateUserUI(user, userData) {
-    const guestButtons = document.getElementById('guestButtons');
-    const userLoggedIn = document.getElementById('userLoggedIn');
-    const navUserName = document.getElementById('navUserName');
-    const navCredits = document.getElementById('navCredits');
-    const mobileAuthArea = document.getElementById('mobileAuthArea');
-    
-    if (guestButtons) guestButtons.style.display = 'none';
-    if (userLoggedIn) userLoggedIn.style.display = 'flex';
-    
-    if (navUserName) {
-        navUserName.textContent = userData.displayName || user.displayName || 'Account';
-    }
-    
-    if (navCredits) {
-        navCredits.textContent = userData.credits || 0;
-    }
-    
-    if (mobileAuthArea) {
-        mobileAuthArea.innerHTML = `
-            <div class="mobile-user-info">
-                <span class="mobile-user-name">${userData.displayName || 'User'}</span>
-                <span class="mobile-user-credits"><i class="fas fa-coins"></i> ${userData.credits || 0} Credits</span>
-            </div>
-            <button class="mobile-logout-btn" onclick="logoutUser()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        `;
-    }
-}
-
-// Show Guest State
-function showGuestState() {
-    const guestButtons = document.getElementById('guestButtons');
-    const userLoggedIn = document.getElementById('userLoggedIn');
-    const mobileAuthArea = document.getElementById('mobileAuthArea');
-    
-    if (guestButtons) guestButtons.style.display = 'flex';
-    if (userLoggedIn) userLoggedIn.style.display = 'none';
-    
-    if (mobileAuthArea) {
-        mobileAuthArea.innerHTML = `
-            <button class="mobile-auth-btn" onclick="openAuthModal('login')">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </button>
-            <button class="mobile-auth-btn" onclick="openAuthModal('register')">
-                <i class="fas fa-user-plus"></i> Create Account
-            </button>
-        `;
-    }
-    
-    // Account page - show login required
-    if (window.location.pathname.includes('account.html')) {
-        const loadingEl = document.getElementById('accountLoading');
-        const contentEl = document.getElementById('accountContent');
-        const loginRequiredEl = document.getElementById('loginRequired');
-        
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (contentEl) contentEl.style.display = 'none';
-        if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
-    }
-}
-
-// Open Auth Modal
-function openAuthModal(mode = 'login') {
-    const modal = document.getElementById('authModal');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const modalTitle = document.getElementById('authModalTitle');
-    const modalSubtitle = document.getElementById('authModalSubtitle');
-    
-    if (!modal) return;
-    
-    modal.style.display = 'flex';
-    
-    if (mode === 'login') {
-        if (loginForm) loginForm.style.display = 'block';
-        if (registerForm) registerForm.style.display = 'none';
-        if (modalTitle) modalTitle.textContent = 'Login';
-        if (modalSubtitle) modalSubtitle.textContent = 'Access your account';
-    } else {
-        if (loginForm) loginForm.style.display = 'none';
-        if (registerForm) registerForm.style.display = 'block';
-        if (modalTitle) modalTitle.textContent = 'Create Account';
-        if (modalSubtitle) modalSubtitle.textContent = 'Join Fahad Tech Premium';
-    }
-}
-
-// Close Auth Modal
-function closeAuthModal() {
-    const modal = document.getElementById('authModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Switch Auth Mode
-function switchAuthMode(mode) {
-    openAuthModal(mode);
-}
-
-// Toggle Password Visibility
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    if (input) {
-        if (input.type === 'password') {
-            input.type = 'text';
-        } else {
-            input.type = 'password';
-        }
-    }
-}
-
-// Handle Login
-function handleLogin(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const loginBtn = document.getElementById('loginBtn');
-    
-    if (!email || !password) {
-        showToast('Please fill in all fields', 'error');
-        return;
-    }
-    
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-    
-    auth.signInWithEmailAndPassword(email, password).then((userCredential) => {
-        showToast('Login successful!', 'success');
-        closeAuthModal();
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-    }).catch((error) => {
-        showToast(error.message, 'error');
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-    });
-}
-
-// Handle Register
-function handleRegister(event) {
-    event.preventDefault();
-    
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
-    const registerBtn = document.getElementById('registerBtn');
-    
-    if (!name || !email || !password || !confirmPassword) {
-        showToast('Please fill in all fields', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showToast('Password must be at least 6 characters', 'error');
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        showToast('Passwords do not match', 'error');
-        return;
-    }
-    
-    registerBtn.disabled = true;
-    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
-    
-    auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
-        const user = userCredential.user;
-        
-        return user.updateProfile({
-            displayName: name
-        }).then(() => {
-            const userData = {
-                uid: user.uid,
-                displayName: name,
-                email: email,
-                credits: 0,
-                accountStatus: 'active',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            return db.collection('users').doc(user.uid).set(userData);
-        });
-    }).then(() => {
-        showToast('Account created successfully!', 'success');
-        closeAuthModal();
-        registerBtn.disabled = false;
-        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-    }).catch((error) => {
-        showToast(error.message, 'error');
-        registerBtn.disabled = false;
-        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-    });
-}
-
-// Logout User
-function logoutUser() {
-    auth.signOut().then(() => {
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1000);
-    }).catch((error) => {
-        showToast('Error logging out', 'error');
-    });
-}
-
-// Go to Account
-function goToAccount() {
-    window.location.href = 'account.html';
-}
-
-// Google Login
-function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then((result) => {
-        const user = result.user;
-        db.collection('users').doc(user.uid).get().then((doc) => {
-            if (!doc.exists) {
-                return db.collection('users').doc(user.uid).set({
-                    uid: user.uid,
-                    displayName: user.displayName || 'User',
-                    email: user.email,
-                    credits: 0,
-                    accountStatus: 'active',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-        }).then(() => {
-            showToast('Google login successful!', 'success');
-        });
-    }).catch((error) => {
-        showToast(error.message, 'error');
-    });
-}
 
 // =========================
 // CREDIT FUNCTIONS
@@ -367,7 +75,7 @@ function checkToolkitAccess() {
     }
     
     if (currentUserData && currentUserData.accountStatus === 'disabled') {
-        showToast('Your account is disabled.', 'error');
+        showToast('Your account is currently disabled. Please contact support.', 'error');
         return;
     }
     
@@ -399,7 +107,7 @@ function processToolAccess() {
     
     if (currentUserData && currentUserData.accountStatus === 'disabled') {
         closeModal();
-        showToast('Account disabled.', 'error');
+        showToast('Your account is currently disabled. Please contact support.', 'error');
         return;
     }
     
@@ -626,7 +334,7 @@ function renderTools(category = 'all', searchTerm = '') {
     
     if (!toolsGrid) return;
     
-    let filteredTools = toolsData;
+    let filteredTools = toolsData || [];
     
     if (category !== 'all') {
         filteredTools = filteredTools.filter(tool => tool.category === category);
@@ -781,7 +489,7 @@ window.onclick = function(event) {
     }
     
     const authModal = document.getElementById('authModal');
-    if (event.target === authModal) {
+    if (event.target === authModal && typeof closeAuthModal === 'function') {
         closeAuthModal();
     }
     
@@ -794,7 +502,7 @@ window.onclick = function(event) {
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeModal();
-        closeAuthModal();
+        if (typeof closeAuthModal === 'function') closeAuthModal();
         closeInsufficientModal();
     }
 });
