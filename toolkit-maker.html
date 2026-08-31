@@ -228,59 +228,69 @@
         function logoutUser() { auth.signOut().then(() => { window.location.href = 'index.html'; }); }
         function handleLogin(e) { e.preventDefault(); const em = document.getElementById('loginEmail').value; const ps = document.getElementById('loginPassword').value; const btn = document.getElementById('loginBtn'); btn.disabled = true; auth.signInWithEmailAndPassword(em, ps).then(() => { closeAuthModal(); btn.disabled = false; }).catch(err => { btn.disabled = false; showToast(err.message, 'error'); }); }
         function handleRegister(e) { e.preventDefault(); const nm = document.getElementById('registerName').value; const em = document.getElementById('registerEmail').value; const ps = document.getElementById('registerPassword').value; const btn = document.getElementById('registerBtn'); btn.disabled = true; auth.createUserWithEmailAndPassword(em, ps).then(uc => { return uc.user.updateProfile({ displayName: nm }).then(() => { return db.collection('users').doc(uc.user.uid).set({ uid: uc.user.uid, displayName: nm, email: em, credits: 0, accountStatus: 'active', createdAt: firebase.firestore.FieldValue.serverTimestamp() }); }); }).then(() => { closeAuthModal(); btn.disabled = false; }).catch(err => { btn.disabled = false; showToast(err.message, 'error'); }); }
-
-        // ============ INSTANT CHECK (NO FLICKER) ============
-        (function() {
-            const user = auth.currentUser;
-            if (user) {
-                document.getElementById('guestButtons').style.display = 'none';
-                document.getElementById('userLoggedIn').style.display = 'flex';
-                document.getElementById('protectedAccess').style.display = 'none';
+        
+        // ============ INSTANT CHECK ============
+(function() {
+    const user = auth.currentUser;
+    
+    if (user) {
+        // USER LOGGED IN - Login screen HIDE karo
+        document.getElementById('protectedAccess').style.display = 'none';
+        document.getElementById('guestButtons').style.display = 'none';
+        document.getElementById('userLoggedIn').style.display = 'flex';
+        
+        // Firestore se data
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('navUserName').textContent = data.displayName || 'Account';
+                document.getElementById('navCredits').textContent = data.credits || 0;
                 
-                db.collection('users').doc(user.uid).get().then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        document.getElementById('navUserName').textContent = data.displayName || 'Account';
-                        document.getElementById('navCredits').textContent = data.credits || 0;
-                        
-                        if (data.accountStatus === 'disabled') { showToast('Account disabled!', 'error'); auth.signOut(); return; }
-                        
-                        if ((data.credits || 0) < 20) {
-                            document.getElementById('toolkitMainContent').style.display = 'none';
-                            document.getElementById('protectedAccess').style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                            return;
-                        }
-                        
-                        const userRef = db.collection('users').doc(user.uid);
-                        db.runTransaction((tx) => {
-                            return tx.get(userRef).then((doc) => {
-                                const credits = doc.data().credits || 0;
-                                if (credits < 20) throw new Error('Insufficient credits');
-                                const newCredits = credits - 20;
-                                tx.update(userRef, { credits: newCredits });
-                                return newCredits;
-                            });
-                        }).then((newCredits) => {
-                            document.getElementById('toolkitMainContent').style.display = 'block';
-                            document.getElementById('protectedAccess').style.display = 'none';
-                            document.getElementById('navCredits').textContent = newCredits;
-                            showToast('20 credits deducted!', 'success');
-                        }).catch(() => {
-                            document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                        });
-                    } else {
-                        db.collection('users').doc(user.uid).set({ uid: user.uid, displayName: user.displayName || 'User', email: user.email, credits: 0, accountStatus: 'active', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(() => {
-                            document.getElementById('currentCreditsDisplay').textContent = '0';
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                        });
-                    }
+                if (data.accountStatus === 'disabled') {
+                    showToast('Account disabled!', 'error');
+                    auth.signOut();
+                    return;
+                }
+                
+                if ((data.credits || 0) < 20) {
+                    // Credits kam - Buy Credits dikhao
+                    document.getElementById('toolkitMainContent').style.display = 'none';
+                    document.getElementById('protectedAccess').style.display = 'none';
+                    document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
+                    document.getElementById('insufficientModal').style.display = 'flex';
+                    return;
+                }
+                
+                // Credits hain - deduct karo
+                const userRef = db.collection('users').doc(user.uid);
+                db.runTransaction((tx) => {
+                    return tx.get(userRef).then((doc) => {
+                        const credits = doc.data().credits || 0;
+                        if (credits < 20) throw new Error('Insufficient credits');
+                        const newCredits = credits - 20;
+                        tx.update(userRef, { credits: newCredits });
+                        return newCredits;
+                    });
+                }).then((newCredits) => {
+                    // TOOLKIT OPEN KARO
+                    document.getElementById('toolkitMainContent').style.display = 'block';
+                    document.getElementById('protectedAccess').style.display = 'none';
+                    document.getElementById('navCredits').textContent = newCredits;
+                    showToast('20 credits deducted!', 'success');
+                }).catch(() => {
+                    document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
+                    document.getElementById('insufficientModal').style.display = 'flex';
                 });
             }
-        })();
-
+        });
+    } else {
+        // NO USER - Login screen dikhao
+        document.getElementById('toolkitMainContent').style.display = 'none';
+        document.getElementById('protectedAccess').style.display = 'flex';
+        document.getElementById('guestButtons').style.display = 'flex';
+        document.getElementById('userLoggedIn').style.display = 'none';
+    }
+})();
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 document.getElementById('guestButtons').style.display = 'none';
