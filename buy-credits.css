@@ -1,0 +1,268 @@
+/* =========================
+   BUY CREDITS PAGE STYLES
+========================= */
+
+.buy-credits-main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 90px 20px 40px;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.pricing-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 25px 20px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.pricing-card.popular {
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+}
+
+.pricing-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #6D5CFF, #FF4D91);
+    color: #fff;
+    white-space: nowrap;
+}
+
+.pricing-badge.popular-badge {
+    background: linear-gradient(135deg, #FFD700, #FF8C42);
+    color: #000;
+    text-shadow: none;
+}
+
+.pricing-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 215, 0, 0.15);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 15px auto;
+    font-size: 25px;
+    color: #FFD700;
+}
+
+.pricing-card h3 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 5px;
+    color: #fff;
+}
+
+.pricing-amount {
+    font-size: 30px;
+    font-weight: 900;
+    color: #FFD700;
+    text-shadow: none;
+    margin-bottom: 5px;
+}
+
+.pricing-save {
+    font-size: 10px;
+    color: #4ade80;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.pricing-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.pricing-details span {
+    font-size: 10px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.pricing-details i {
+    color: #4ade80;
+    font-size: 9px;
+}
+
+.select-package-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #6D5CFF, #FF4D91);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.select-package-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(109, 92, 255, 0.4);
+}
+
+.pricing-card.popular .select-package-btn {
+    background: linear-gradient(135deg, #FFD700, #FF8C42);
+    color: #000;
+    text-shadow: none;
+}
+
+/* Payment Modal */
+.payment-modal {
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.payment-methods {
+    margin-bottom: 15px;
+}
+
+.payment-methods h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.payment-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.payment-option {
+    flex: 1;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.payment-option input {
+    margin: 0;
+}
+
+.payment-option i {
+    font-size: 14px;
+    color: #FFD700;
+}
+
+.payment-option span {
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.payment-instructions {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 10px;
+    color: #fff;
+}
+
+.payment-instructions strong {
+    color: #FFD700;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.submit-payment-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #6D5CFF, #FF4D91);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.submit-payment-btn:hover {
+    transform: translateY(-2px);
+}
+
+.submit-payment-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .buy-credits-main {
+        padding: 60px 8px 20px;
+    }
+    
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .pricing-card {
+        padding: 20px 15px;
+    }
+    
+    .pricing-amount {
+        font-size: 24px;
+    }
+    
+    .payment-options {
+        flex-direction: column;
+    }
+    
+    .payment-option {
+        min-width: auto;
+    }
+}
