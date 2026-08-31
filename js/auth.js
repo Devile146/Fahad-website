@@ -1,17 +1,31 @@
 // =========================
-// FAHAD TECH - AUTHENTICATION (CENTRALIZED)
+// FAHAD TECH - AUTHENTICATION (FINAL)
 // =========================
 
 let currentUser = null;
 let currentUserData = null;
 let userStatusListener = null;
 
+// Page load hote hi turant check
+document.addEventListener('DOMContentLoaded', function() {
+    const user = auth.currentUser;
+    if (user) {
+        currentUser = user;
+        const guestButtons = document.getElementById('guestButtons');
+        const userLoggedIn = document.getElementById('userLoggedIn');
+        if (guestButtons) guestButtons.style.display = 'none';
+        if (userLoggedIn) userLoggedIn.style.display = 'flex';
+        loadUserData(user);
+        startUserListener(user);
+    }
+});
+
 // Auth state listener
 auth.onAuthStateChanged(function(user) {
     if (user) {
         currentUser = user;
-        startUserListener(user);
         loadUserData(user);
+        startUserListener(user);
     } else {
         currentUser = null;
         currentUserData = null;
@@ -19,8 +33,9 @@ auth.onAuthStateChanged(function(user) {
     }
 });
 
-// Real-time user listener (admin changes sync automatically)
+// Real-time user listener (admin changes turant reflect honge)
 function startUserListener(user) {
+    // Purana listener hatao
     if (userStatusListener) userStatusListener();
     
     userStatusListener = db.collection('users').doc(user.uid).onSnapshot(function(doc) {
@@ -28,12 +43,10 @@ function startUserListener(user) {
             currentUserData = doc.data();
             updateUserUI(user, currentUserData);
             
-            // Account page data
             if (window.location.pathname.includes('account.html')) {
                 displayAccountData(currentUserData);
             }
             
-            // Disabled account check
             if (currentUserData.accountStatus === 'disabled') {
                 showToast('Your account has been disabled by admin!', 'error');
                 setTimeout(() => {
@@ -49,7 +62,6 @@ function startUserListener(user) {
     });
 }
 
-// Load user data from Firestore
 function loadUserData(user) {
     db.collection('users').doc(user.uid).get().then((doc) => {
         if (doc.exists) {
@@ -63,39 +75,20 @@ function loadUserData(user) {
             createUserDocument(user);
         }
     }).catch((error) => {
-        console.error("Error loading user data:", error);
-        showToast('Error loading user data', 'error');
+        console.error("Error:", error);
+        if (window.location.pathname.includes('account.html')) {
+            const loadingEl = document.getElementById('accountLoading');
+            const loginRequiredEl = document.getElementById('loginRequired');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
+        }
     });
 }
 
-// Create user document
-function createUserDocument(user) {
-    const userData = {
-        uid: user.uid,
-        displayName: user.displayName || 'User',
-        email: user.email,
-        credits: 0,
-        accountStatus: 'active',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('users').doc(user.uid).set(userData).then(() => {
-        currentUserData = userData;
-        updateUserUI(user, userData);
-        showToast('Welcome to Fahad Tech!', 'success');
-    }).catch((error) => {
-        console.error("Error creating user document:", error);
-        showToast('Error creating account', 'error');
-    });
-}
-
-// Display account data
 function displayAccountData(data) {
     const loadingEl = document.getElementById('accountLoading');
     const contentEl = document.getElementById('accountContent');
     const loginRequiredEl = document.getElementById('loginRequired');
-    
     if (loadingEl) loadingEl.style.display = 'none';
     if (loginRequiredEl) loginRequiredEl.style.display = 'none';
     if (contentEl) contentEl.style.display = 'block';
@@ -122,13 +115,24 @@ function displayAccountData(data) {
         try {
             const date = data.createdAt.toDate();
             memberSinceEl.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch(e) {
-            memberSinceEl.textContent = 'N/A';
-        }
+        } catch(e) { memberSinceEl.textContent = 'N/A'; }
     }
 }
 
-// Update user interface
+function createUserDocument(user) {
+    const userData = {
+        uid: user.uid, displayName: user.displayName || 'User', email: user.email,
+        credits: 0, accountStatus: 'active',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('users').doc(user.uid).set(userData).then(() => {
+        currentUserData = userData;
+        updateUserUI(user, userData);
+        if (window.location.pathname.includes('account.html')) displayAccountData(userData);
+    }).catch((error) => { console.error("Error:", error); });
+}
+
 function updateUserUI(user, userData) {
     const guestButtons = document.getElementById('guestButtons');
     const userLoggedIn = document.getElementById('userLoggedIn');
@@ -138,14 +142,8 @@ function updateUserUI(user, userData) {
     
     if (guestButtons) guestButtons.style.display = 'none';
     if (userLoggedIn) userLoggedIn.style.display = 'flex';
-    
-    if (navUserName) {
-        navUserName.textContent = userData.displayName || user.displayName || 'Account';
-    }
-    
-    if (navCredits) {
-        navCredits.textContent = userData.credits || 0;
-    }
+    if (navUserName) navUserName.textContent = userData.displayName || 'Account';
+    if (navCredits) navCredits.textContent = userData.credits || 0;
     
     if (mobileAuthArea) {
         mobileAuthArea.innerHTML = `
@@ -153,14 +151,11 @@ function updateUserUI(user, userData) {
                 <span class="mobile-user-name">${userData.displayName || 'User'}</span>
                 <span class="mobile-user-credits"><i class="fas fa-coins"></i> ${userData.credits || 0} Credits</span>
             </div>
-            <button class="mobile-logout-btn" onclick="logoutUser()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+            <button class="mobile-logout-btn" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         `;
     }
 }
 
-// Show guest state
 function showGuestState() {
     const guestButtons = document.getElementById('guestButtons');
     const userLoggedIn = document.getElementById('userLoggedIn');
@@ -171,12 +166,8 @@ function showGuestState() {
     
     if (mobileAuthArea) {
         mobileAuthArea.innerHTML = `
-            <button class="mobile-auth-btn" onclick="openAuthModal('login')">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </button>
-            <button class="mobile-auth-btn" onclick="openAuthModal('register')">
-                <i class="fas fa-user-plus"></i> Create Account
-            </button>
+            <button class="mobile-auth-btn" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
+            <button class="mobile-auth-btn" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
         `;
     }
     
@@ -184,14 +175,12 @@ function showGuestState() {
         const loadingEl = document.getElementById('accountLoading');
         const contentEl = document.getElementById('accountContent');
         const loginRequiredEl = document.getElementById('loginRequired');
-        
         if (loadingEl) loadingEl.style.display = 'none';
         if (contentEl) contentEl.style.display = 'none';
         if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
     }
 }
 
-// Google Login
 function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).then((result) => {
@@ -199,34 +188,23 @@ function googleLogin() {
         db.collection('users').doc(user.uid).get().then((doc) => {
             if (!doc.exists) {
                 return db.collection('users').doc(user.uid).set({
-                    uid: user.uid,
-                    displayName: user.displayName || 'User',
-                    email: user.email,
-                    credits: 0,
-                    accountStatus: 'active',
+                    uid: user.uid, displayName: user.displayName || 'User', email: user.email,
+                    credits: 0, accountStatus: 'active',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
-        }).then(() => {
-            showToast('Google login successful!', 'success');
-        });
-    }).catch((error) => {
-        showToast(error.message, 'error');
-    });
+        }).then(() => { showToast('Google login successful!', 'success'); });
+    }).catch((error) => { showToast(error.message, 'error'); });
 }
 
-// Open auth modal
 function openAuthModal(mode = 'login') {
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const modalTitle = document.getElementById('authModalTitle');
     const modalSubtitle = document.getElementById('authModalSubtitle');
-    
     if (!modal) return;
-    
     modal.style.display = 'flex';
-    
     if (mode === 'login') {
         if (loginForm) loginForm.style.display = 'block';
         if (registerForm) registerForm.style.display = 'none';
@@ -240,48 +218,23 @@ function openAuthModal(mode = 'login') {
     }
 }
 
-// Close auth modal
-function closeAuthModal() {
-    const modal = document.getElementById('authModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
+function closeAuthModal() { const modal = document.getElementById('authModal'); if (modal) modal.style.display = 'none'; }
+function switchAuthMode(mode) { openAuthModal(mode); }
 
-// Switch auth mode
-function switchAuthMode(mode) {
-    openAuthModal(mode);
-}
-
-// Toggle password visibility
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
-    if (input) {
-        if (input.type === 'password') {
-            input.type = 'text';
-        } else {
-            input.type = 'password';
-        }
-    }
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-// Handle login
 function handleLogin(event) {
     event.preventDefault();
-    
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const loginBtn = document.getElementById('loginBtn');
-    
-    if (!email || !password) {
-        showToast('Please fill in all fields', 'error');
-        return;
-    }
-    
+    if (!email || !password) { showToast('Fill all fields', 'error'); return; }
     loginBtn.disabled = true;
     loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-    
-    auth.signInWithEmailAndPassword(email, password).then((userCredential) => {
+    auth.signInWithEmailAndPassword(email, password).then(() => {
         showToast('Login successful!', 'success');
         closeAuthModal();
         loginBtn.disabled = false;
@@ -293,54 +246,30 @@ function handleLogin(event) {
     });
 }
 
-// Handle register
 function handleRegister(event) {
     event.preventDefault();
-    
     const name = document.getElementById('registerName').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
     const registerBtn = document.getElementById('registerBtn');
-    
-    if (!name || !email || !password || !confirmPassword) {
-        showToast('Please fill in all fields', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showToast('Password must be at least 6 characters', 'error');
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        showToast('Passwords do not match', 'error');
-        return;
-    }
-    
+    if (!name || !email || !password || !confirmPassword) { showToast('Fill all fields', 'error'); return; }
+    if (password !== confirmPassword) { showToast('Passwords do not match', 'error'); return; }
+    if (password.length < 6) { showToast('Password min 6 chars', 'error'); return; }
     registerBtn.disabled = true;
-    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
-    
+    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
         const user = userCredential.user;
-        
-        return user.updateProfile({
-            displayName: name
-        }).then(() => {
-            const userData = {
-                uid: user.uid,
-                displayName: name,
-                email: email,
-                credits: 0,
+        return user.updateProfile({ displayName: name }).then(() => {
+            return db.collection('users').doc(user.uid).set({
+                uid: user.uid, displayName: name, email: email, credits: 0,
                 accountStatus: 'active',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            return db.collection('users').doc(user.uid).set(userData);
+            });
         });
     }).then(() => {
-        showToast('Account created successfully!', 'success');
+        showToast('Account created!', 'success');
         closeAuthModal();
         registerBtn.disabled = false;
         registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
@@ -351,66 +280,24 @@ function handleRegister(event) {
     });
 }
 
-// Logout user
 function logoutUser() {
     auth.signOut().then(() => {
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1000);
-    }).catch((error) => {
-        showToast('Error logging out', 'error');
+        showToast('Logged out', 'success');
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
     });
 }
 
-// Go to account
-function goToAccount() {
-    window.location.href = 'account.html';
-}
+function goToAccount() { window.location.href = 'account.html'; }
+function updateCreditsDisplay(credits) { const el = document.getElementById('navCredits'); if (el) el.textContent = credits; }
 
-// Update credits display
-function updateCreditsDisplay(credits) {
-    const navCredits = document.getElementById('navCredits');
-    if (navCredits) {
-        navCredits.textContent = credits;
-    }
-}
-
-// Toast notification
 function showToast(message, type = 'info') {
     let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'toast-container';
-        container.id = 'toastContainer';
-        document.body.appendChild(container);
-    }
-    
+    if (!container) { container = document.createElement('div'); container.className = 'toast-container'; container.id = 'toastContainer'; document.body.appendChild(container); }
     const toast = document.createElement('div');
     toast.classList.add('toast', `toast-${type}`);
-    
-    const icons = {
-        'success': 'fas fa-check-circle',
-        'error': 'fas fa-exclamation-circle',
-        'info': 'fas fa-info-circle',
-        'warning': 'fas fa-exclamation-triangle'
-    };
-    
-    toast.innerHTML = `
-        <i class="${icons[type] || icons.info}"></i>
-        <span>${message}</span>
-    `;
-    
+    const icons = { 'success': 'fas fa-check-circle', 'error': 'fas fa-exclamation-circle', 'info': 'fas fa-info-circle' };
+    toast.innerHTML = `<i class="${icons[type] || icons.info}"></i><span>${message}</span>`;
     container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
-}
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
