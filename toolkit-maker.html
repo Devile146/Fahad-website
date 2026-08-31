@@ -95,7 +95,6 @@
         </div>
     </aside>
 
-    <!-- Main Content - HIDDEN -->
     <main class="main-content toolkit-main" id="toolkitMainContent" style="display:none;">
         <div class="toolkit-header">
             <h1 class="page-title">🛠️ <span class="gradient-text">Toolkit Maker</span></h1>
@@ -157,12 +156,11 @@
         </div>
     </main>
 
-    <!-- Protected Access -->
     <div class="protected-access" id="protectedAccess" style="display:none;">
         <div class="protected-box">
             <div class="protected-icon"><i class="fas fa-lock"></i></div>
-            <h2>Access Required</h2>
-            <p>Login required + 20 credits</p>
+            <h2>Login Required</h2>
+            <p>Login to access Toolkit Maker</p>
             <div class="protected-actions">
                 <button class="btn-primary" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
                 <button class="btn-secondary" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
@@ -170,7 +168,6 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
     <div class="modal-overlay" id="authModal" style="display:none;">
         <div class="modal-box auth-modal">
             <button class="modal-close" onclick="closeAuthModal()">&times;</button>
@@ -191,7 +188,6 @@
         </div>
     </div>
 
-    <!-- Insufficient Credits -->
     <div class="modal-overlay" id="insufficientModal" style="display:none;">
         <div class="modal-box">
             <button class="modal-close" onclick="closeInsufficientModal()">&times;</button>
@@ -219,11 +215,7 @@
     <script src="js/credits.js"></script>
     
     <script>
-        // ============ TOOLKIT ACCESS CONTROL ============
         auth.onAuthStateChanged(function(user) {
-            const mainContent = document.getElementById('toolkitMainContent');
-            const protectedAccess = document.getElementById('protectedAccess');
-            
             if (user) {
                 document.getElementById('guestButtons').style.display = 'none';
                 document.getElementById('userLoggedIn').style.display = 'flex';
@@ -234,47 +226,14 @@
                         document.getElementById('navUserName').textContent = data.displayName || 'Account';
                         document.getElementById('navCredits').textContent = data.credits || 0;
                         
-                        // ACCOUNT DISABLED
                         if (data.accountStatus === 'disabled') {
-                            mainContent.style.display = 'none';
-                            protectedAccess.style.display = 'none';
                             showToast('Account disabled!', 'error');
                             return;
                         }
                         
-                        // CHECK CREDITS
-                        if ((data.credits || 0) < 20) {
-                            mainContent.style.display = 'none';
-                            protectedAccess.style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                            return;
-                        }
-                        
-                        // DEDUCT 20 CREDITS
-                        const userRef = db.collection('users').doc(user.uid);
-                        db.runTransaction((tx) => {
-                            return tx.get(userRef).then((doc) => {
-                                const credits = doc.data().credits || 0;
-                                if (credits < 20) throw new Error('Insufficient credits');
-                                const newCredits = credits - 20;
-                                tx.update(userRef, { credits: newCredits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                                return newCredits;
-                            });
-                        }).then((newCredits) => {
-                            // OPEN TOOLKIT
-                            mainContent.style.display = 'block';
-                            protectedAccess.style.display = 'none';
-                            document.getElementById('navCredits').textContent = newCredits;
-                            showToast('20 credits deducted!', 'success');
-                        }).catch((error) => {
-                            mainContent.style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = data.credits || 0;
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                        });
-                        
+                        // VERIFICATION POPUP
+                        showCreditVerification(data.credits || 0, user.uid);
                     } else {
-                        // CREATE USER DOC
                         db.collection('users').doc(user.uid).set({
                             uid: user.uid,
                             displayName: user.displayName || 'User',
@@ -283,20 +242,78 @@
                             accountStatus: 'active',
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         }).then(() => {
-                            mainContent.style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = '0';
-                            document.getElementById('insufficientModal').style.display = 'flex';
+                            showCreditVerification(0, user.uid);
                         });
                     }
                 });
             } else {
-                // NOT LOGGED IN
-                mainContent.style.display = 'none';
-                protectedAccess.style.display = 'flex';
+                document.getElementById('toolkitMainContent').style.display = 'none';
+                document.getElementById('protectedAccess').style.display = 'flex';
                 document.getElementById('guestButtons').style.display = 'flex';
                 document.getElementById('userLoggedIn').style.display = 'none';
             }
         });
+        
+        function showCreditVerification(currentCredits, userId) {
+            const remaining = currentCredits - 20;
+            const modalHTML = `
+                <div class="modal-overlay" id="creditVerifyModal" style="display:flex;">
+                    <div class="modal-box" style="text-align:center;max-width:320px;">
+                        <div style="font-size:40px;color:#FFD700;margin-bottom:10px;"><i class="fas fa-coins"></i></div>
+                        <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Toolkit Maker Access</h2>
+                        <p style="font-size:11px;color:#fff;margin-bottom:15px;">20 credits will be deducted</p>
+                        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:15px;margin-bottom:15px;">
+                            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+                                <span style="color:#fff;">Your Credits:</span>
+                                <strong style="color:#FFD700;">${currentCredits}</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;">
+                                <span style="color:#fff;">Cost:</span>
+                                <strong style="color:#FF4D91;">-20</strong>
+                            </div>
+                            <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;display:flex;justify-content:space-between;font-size:13px;">
+                                <span style="color:#fff;font-weight:700;">Remaining:</span>
+                                <strong style="color:#4ade80;">${remaining >= 0 ? remaining : 0}</strong>
+                            </div>
+                        </div>
+                        ${currentCredits >= 20 ? `
+                            <button onclick="confirmToolkitAccess('${userId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,#6D5CFF,#FF4D91);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:none;">
+                                <i class="fas fa-check"></i> Confirm & Open
+                            </button>
+                        ` : `
+                            <button onclick="document.getElementById('creditVerifyModal').remove(); document.getElementById('insufficientModal').style.display='flex'; document.getElementById('currentCreditsDisplay').textContent='${currentCredits}';" style="width:100%;padding:12px;background:rgba(255,77,145,0.3);border-radius:8px;color:#FF4D91;font-size:12px;font-weight:700;cursor:pointer;border:none;">
+                                <i class="fas fa-shopping-cart"></i> Buy Credits
+                            </button>
+                        `}
+                        <button onclick="document.getElementById('creditVerifyModal').remove(); window.location.href='index.html';" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border-radius:8px;color:#fff;font-size:10px;cursor:pointer;border:none;margin-top:8px;">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        function confirmToolkitAccess(userId) {
+            const modal = document.getElementById('creditVerifyModal');
+            if (modal) modal.remove();
+            
+            const userRef = db.collection('users').doc(userId);
+            db.runTransaction((tx) => {
+                return tx.get(userRef).then((doc) => {
+                    const credits = doc.data().credits || 0;
+                    if (credits < 20) throw new Error('Insufficient credits');
+                    const newCredits = credits - 20;
+                    tx.update(userRef, { credits: newCredits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    return newCredits;
+                });
+            }).then((newCredits) => {
+                document.getElementById('toolkitMainContent').style.display = 'block';
+                document.getElementById('protectedAccess').style.display = 'none';
+                document.getElementById('navCredits').textContent = newCredits;
+                showToast('20 credits deducted!', 'success');
+            }).catch((error) => {
+                showToast(error.message, 'error');
+            });
+        }
     </script>
 </body>
-</html>
+                                                          </html>
