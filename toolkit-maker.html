@@ -215,24 +215,27 @@
     <script src="js/credits.js"></script>
     
     <script>
+        let currentUser = null;
+        let currentUserData = null;
+        
         auth.onAuthStateChanged(function(user) {
             if (user) {
+                currentUser = user;
                 document.getElementById('guestButtons').style.display = 'none';
                 document.getElementById('userLoggedIn').style.display = 'flex';
                 
                 db.collection('users').doc(user.uid).get().then((doc) => {
                     if (doc.exists) {
-                        const data = doc.data();
-                        document.getElementById('navUserName').textContent = data.displayName || 'Account';
-                        document.getElementById('navCredits').textContent = data.credits || 0;
+                        currentUserData = doc.data();
+                        document.getElementById('navUserName').textContent = currentUserData.displayName || 'Account';
+                        document.getElementById('navCredits').textContent = currentUserData.credits || 0;
                         
-                        if (data.accountStatus === 'disabled') {
+                        if (currentUserData.accountStatus === 'disabled') {
                             showToast('Account disabled!', 'error');
                             return;
                         }
                         
-                        // VERIFICATION POPUP
-                        showCreditVerification(data.credits || 0, user.uid);
+                        showVerificationPopup(currentUserData.credits || 0, user.uid);
                     } else {
                         db.collection('users').doc(user.uid).set({
                             uid: user.uid,
@@ -242,7 +245,7 @@
                             accountStatus: 'active',
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         }).then(() => {
-                            showCreditVerification(0, user.uid);
+                            showVerificationPopup(0, user.uid);
                         });
                     }
                 });
@@ -254,47 +257,47 @@
             }
         });
         
-        function showCreditVerification(currentCredits, userId) {
-            const remaining = currentCredits - 20;
-            const modalHTML = `
-                <div class="modal-overlay" id="creditVerifyModal" style="display:flex;">
-                    <div class="modal-box" style="text-align:center;max-width:320px;">
-                        <div style="font-size:40px;color:#FFD700;margin-bottom:10px;"><i class="fas fa-coins"></i></div>
-                        <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Toolkit Maker Access</h2>
-                        <p style="font-size:11px;color:#fff;margin-bottom:15px;">20 credits will be deducted</p>
-                        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:15px;margin-bottom:15px;">
+        function showVerificationPopup(credits, userId) {
+            const remaining = credits - 20;
+            const popupHTML = `
+                <div class="modal-overlay" id="verifyPopup" style="display:flex;z-index:9999;">
+                    <div class="modal-box" style="max-width:320px;text-align:center;">
+                        <div style="font-size:45px;color:#FFD700;margin-bottom:10px;"><i class="fas fa-coins"></i></div>
+                        <h2 style="font-size:18px;font-weight:800;color:#fff;margin-bottom:5px;">Toolkit Maker</h2>
+                        <p style="font-size:11px;color:#fff;margin-bottom:15px;">20 credits cut honge</p>
+                        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:15px;margin-bottom:15px;">
                             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
-                                <span style="color:#fff;">Your Credits:</span>
-                                <strong style="color:#FFD700;">${currentCredits}</strong>
+                                <span style="color:#fff;">Aapke Credits:</span>
+                                <strong style="color:#FFD700;">${credits}</strong>
                             </div>
                             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;">
                                 <span style="color:#fff;">Cost:</span>
                                 <strong style="color:#FF4D91;">-20</strong>
                             </div>
                             <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;display:flex;justify-content:space-between;font-size:13px;">
-                                <span style="color:#fff;font-weight:700;">Remaining:</span>
+                                <span style="color:#fff;font-weight:700;">Baad me:</span>
                                 <strong style="color:#4ade80;">${remaining >= 0 ? remaining : 0}</strong>
                             </div>
                         </div>
-                        ${currentCredits >= 20 ? `
-                            <button onclick="confirmToolkitAccess('${userId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,#6D5CFF,#FF4D91);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:none;">
-                                <i class="fas fa-check"></i> Confirm & Open
+                        ${credits >= 20 ? `
+                            <button onclick="deductAndOpen('${userId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,#6D5CFF,#FF4D91);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:none;">
+                                <i class="fas fa-check"></i> Confirm & Open Toolkit
                             </button>
                         ` : `
-                            <button onclick="document.getElementById('creditVerifyModal').remove(); document.getElementById('insufficientModal').style.display='flex'; document.getElementById('currentCreditsDisplay').textContent='${currentCredits}';" style="width:100%;padding:12px;background:rgba(255,77,145,0.3);border-radius:8px;color:#FF4D91;font-size:12px;font-weight:700;cursor:pointer;border:none;">
+                            <button onclick="document.getElementById('verifyPopup').remove(); document.getElementById('insufficientModal').style.display='flex'; document.getElementById('currentCreditsDisplay').textContent='${credits}';" style="width:100%;padding:12px;background:rgba(255,77,145,0.3);border-radius:8px;color:#FF4D91;font-size:12px;font-weight:700;cursor:pointer;border:none;">
                                 <i class="fas fa-shopping-cart"></i> Buy Credits
                             </button>
                         `}
-                        <button onclick="document.getElementById('creditVerifyModal').remove(); window.location.href='index.html';" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border-radius:8px;color:#fff;font-size:10px;cursor:pointer;border:none;margin-top:8px;">Cancel</button>
+                        <button onclick="document.getElementById('verifyPopup').remove(); window.location.href='index.html';" style="width:100%;padding:10px;background:rgba(255,255,255,0.06);border-radius:8px;color:#fff;font-size:10px;cursor:pointer;border:none;margin-top:8px;">Cancel</button>
                     </div>
                 </div>
             `;
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.body.insertAdjacentHTML('beforeend', popupHTML);
         }
         
-        function confirmToolkitAccess(userId) {
-            const modal = document.getElementById('creditVerifyModal');
-            if (modal) modal.remove();
+        function deductAndOpen(userId) {
+            const popup = document.getElementById('verifyPopup');
+            if (popup) popup.remove();
             
             const userRef = db.collection('users').doc(userId);
             db.runTransaction((tx) => {
@@ -316,4 +319,4 @@
         }
     </script>
 </body>
-                                                          </html>
+    </html>
