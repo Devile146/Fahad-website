@@ -21,29 +21,272 @@ document.addEventListener('DOMContentLoaded', function() {
     initMobileMenu();
     initContactLinks();
     initProfileImage();
+    initAuthState();
     
     // Initialize tools if on tools page
     if (document.getElementById('toolsGrid')) {
-        if (typeof loadToolsFromFirestore === 'function') {
-            loadToolsFromFirestore().then(() => {
-                renderTools('all');
-                checkUrlCategory();
-            }).catch(() => {
-                renderTools('all');
-                checkUrlCategory();
-            });
-        } else {
+        loadToolsFromFirestore().then(() => {
             renderTools('all');
             checkUrlCategory();
-        }
+        }).catch(() => {
+            renderTools('all');
+            checkUrlCategory();
+        });
     }
 });
+
+// =========================
+// AUTHENTICATION FUNCTIONS
+// =========================
+
+function initAuthState() {
+    if (typeof auth === 'undefined') return;
+    
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            currentUser = user;
+            loadUserData(user);
+        } else {
+            currentUser = null;
+            currentUserData = null;
+            showGuestState();
+        }
+    });
+}
+
+function loadUserData(user) {
+    db.collection('users').doc(user.uid).get().then((doc) => {
+        if (doc.exists) {
+            currentUserData = doc.data();
+            updateUserUI(user, currentUserData);
+        } else {
+            createUserDocument(user);
+        }
+    }).catch((error) => {
+        console.error("Error loading user data:", error);
+    });
+}
+
+function createUserDocument(user) {
+    const userData = {
+        uid: user.uid,
+        displayName: user.displayName || 'User',
+        email: user.email,
+        credits: 0,
+        accountStatus: 'active',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('users').doc(user.uid).set(userData).then(() => {
+        currentUserData = userData;
+        updateUserUI(user, userData);
+        showToast('Welcome to Fahad Tech!', 'success');
+    }).catch((error) => {
+        console.error("Error creating user document:", error);
+    });
+}
+
+function updateUserUI(user, userData) {
+    const guestButtons = document.getElementById('guestButtons');
+    const userLoggedIn = document.getElementById('userLoggedIn');
+    const navUserName = document.getElementById('navUserName');
+    const navCredits = document.getElementById('navCredits');
+    const mobileAuthArea = document.getElementById('mobileAuthArea');
+    
+    if (guestButtons) guestButtons.style.display = 'none';
+    if (userLoggedIn) userLoggedIn.style.display = 'flex';
+    
+    if (navUserName) {
+        navUserName.textContent = userData.displayName || user.displayName || 'Account';
+    }
+    
+    if (navCredits) {
+        navCredits.textContent = userData.credits || 0;
+    }
+    
+    if (mobileAuthArea) {
+        mobileAuthArea.innerHTML = `
+            <div class="mobile-user-info">
+                <span class="mobile-user-name">${userData.displayName || 'User'}</span>
+                <span class="mobile-user-credits"><i class="fas fa-coins"></i> ${userData.credits || 0} Credits</span>
+            </div>
+            <button class="mobile-logout-btn" onclick="logoutUser()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        `;
+    }
+}
+
+function showGuestState() {
+    const guestButtons = document.getElementById('guestButtons');
+    const userLoggedIn = document.getElementById('userLoggedIn');
+    const mobileAuthArea = document.getElementById('mobileAuthArea');
+    
+    if (guestButtons) guestButtons.style.display = 'flex';
+    if (userLoggedIn) userLoggedIn.style.display = 'none';
+    
+    if (mobileAuthArea) {
+        mobileAuthArea.innerHTML = `
+            <button class="mobile-auth-btn" onclick="openAuthModal('login')">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button class="mobile-auth-btn" onclick="openAuthModal('register')">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        `;
+    }
+}
+
+function openAuthModal(mode = 'login') {
+    const modal = document.getElementById('authModal');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const modalTitle = document.getElementById('authModalTitle');
+    const modalSubtitle = document.getElementById('authModalSubtitle');
+    
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    if (mode === 'login') {
+        if (loginForm) loginForm.style.display = 'block';
+        if (registerForm) registerForm.style.display = 'none';
+        if (modalTitle) modalTitle.textContent = 'Login';
+        if (modalSubtitle) modalSubtitle.textContent = 'Access your account';
+    } else {
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'block';
+        if (modalTitle) modalTitle.textContent = 'Create Account';
+        if (modalSubtitle) modalSubtitle.textContent = 'Join Fahad Tech Premium';
+    }
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function switchAuthMode(mode) {
+    openAuthModal(mode);
+}
+
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    if (input) {
+        if (input.type === 'password') {
+            input.type = 'text';
+        } else {
+            input.type = 'password';
+        }
+    }
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (!email || !password) {
+        showToast('Please fill in all fields', 'error');
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+    
+    auth.signInWithEmailAndPassword(email, password).then((userCredential) => {
+        showToast('Login successful!', 'success');
+        closeAuthModal();
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+    }).catch((error) => {
+        showToast(error.message, 'error');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+    });
+}
+
+function handleRegister(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const registerBtn = document.getElementById('registerBtn');
+    
+    if (!name || !email || !password || !confirmPassword) {
+        showToast('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+    
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+    
+    auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
+        const user = userCredential.user;
+        
+        return user.updateProfile({
+            displayName: name
+        }).then(() => {
+            const userData = {
+                uid: user.uid,
+                displayName: name,
+                email: email,
+                credits: 0,
+                accountStatus: 'active',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            return db.collection('users').doc(user.uid).set(userData);
+        });
+    }).then(() => {
+        showToast('Account created successfully!', 'success');
+        closeAuthModal();
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+    }).catch((error) => {
+        showToast(error.message, 'error');
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+    });
+}
+
+function logoutUser() {
+    auth.signOut().then(() => {
+        showToast('Logged out successfully', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1000);
+    }).catch((error) => {
+        showToast('Error logging out', 'error');
+    });
+}
+
+function goToAccount() {
+    window.location.href = 'account.html';
+}
 
 // =========================
 // CREDIT FUNCTIONS
 // =========================
 
-// Check Tool Access
 function checkToolAccess(category) {
     if (!currentUser) {
         openAuthModal('login');
@@ -67,31 +310,6 @@ function checkToolAccess(category) {
     });
 }
 
-// Check Toolkit Access
-function checkToolkitAccess() {
-    if (!currentUser) {
-        openAuthModal('login');
-        return;
-    }
-    
-    if (currentUserData && currentUserData.accountStatus === 'disabled') {
-        showToast('Your account is currently disabled. Please contact support.', 'error');
-        return;
-    }
-    
-    if (!currentUserData || currentUserData.credits < 20) {
-        showInsufficientCredits(20);
-        return;
-    }
-    
-    deductCredits(20, 'toolkit_maker_access', 'Toolkit Maker').then(() => {
-        window.location.href = 'toolkit-maker.html';
-    }).catch((error) => {
-        showToast(error.message, 'error');
-    });
-}
-
-// Process Tool Access
 function processToolAccess() {
     if (isProcessingTool) return;
     
@@ -129,7 +347,6 @@ function processToolAccess() {
     });
 }
 
-// Deduct Credits
 function deductCredits(amount, action, details) {
     const userRef = db.collection('users').doc(currentUser.uid);
     
@@ -181,7 +398,6 @@ function deductCredits(amount, action, details) {
     });
 }
 
-// Update Credits Display
 function updateCreditsDisplay(credits) {
     const navCredits = document.getElementById('navCredits');
     if (navCredits) {
@@ -189,7 +405,6 @@ function updateCreditsDisplay(credits) {
     }
 }
 
-// Show Insufficient Credits
 function showInsufficientCredits(required) {
     const modal = document.getElementById('insufficientModal');
     const currentCreditsDisplay = document.getElementById('currentCreditsDisplay');
@@ -206,7 +421,6 @@ function showInsufficientCredits(required) {
     }
 }
 
-// Close Insufficient Credits Modal
 function closeInsufficientModal() {
     const modal = document.getElementById('insufficientModal');
     if (modal) {
@@ -214,7 +428,6 @@ function closeInsufficientModal() {
     }
 }
 
-// Go to Buy Credits
 function goToBuyCredits() {
     closeInsufficientModal();
     window.location.href = 'buy-credits.html';
@@ -334,7 +547,7 @@ function renderTools(category = 'all', searchTerm = '') {
     
     if (!toolsGrid) return;
     
-    let filteredTools = toolsData || [];
+    let filteredTools = toolsData;
     
     if (category !== 'all') {
         filteredTools = filteredTools.filter(tool => tool.category === category);
@@ -489,7 +702,7 @@ window.onclick = function(event) {
     }
     
     const authModal = document.getElementById('authModal');
-    if (event.target === authModal && typeof closeAuthModal === 'function') {
+    if (event.target === authModal) {
         closeAuthModal();
     }
     
@@ -502,7 +715,7 @@ window.onclick = function(event) {
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeModal();
-        if (typeof closeAuthModal === 'function') closeAuthModal();
+        closeAuthModal();
         closeInsufficientModal();
     }
 });
