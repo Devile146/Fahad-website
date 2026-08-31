@@ -217,44 +217,45 @@
     <script>
         let currentUser = null;
         let currentUserData = null;
-        // SIMPLE WORKING SCRIPT
-auth.onAuthStateChanged(function(user) {
-    if (user) {
-        document.getElementById('guestButtons').style.display = 'none';
-        document.getElementById('userLoggedIn').style.display = 'flex';
         
-        db.collection('users').doc(user.uid).get().then((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                document.getElementById('navUserName').textContent = data.displayName || 'Account';
-                document.getElementById('navCredits').textContent = data.credits || 0;
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                currentUser = user;
+                document.getElementById('guestButtons').style.display = 'none';
+                document.getElementById('userLoggedIn').style.display = 'flex';
                 
-                // DIRECT OPEN - 20 credits deduct karo
-                const userRef = db.collection('users').doc(user.uid);
-                db.runTransaction((tx) => {
-                    return tx.get(userRef).then((doc) => {
-                        const credits = doc.data().credits || 0;
-                        if (credits < 20) throw new Error('Insufficient credits');
-                        const newCredits = credits - 20;
-                        tx.update(userRef, { credits: newCredits });
-                        return newCredits;
-                    });
-                }).then((newCredits) => {
-                    document.getElementById('toolkitMainContent').style.display = 'block';
-                    document.getElementById('protectedAccess').style.display = 'none';
-                    document.getElementById('navCredits').textContent = newCredits;
-                }).catch(() => {
-                    document.getElementById('currentCreditsDisplay').textContent = '0';
-                    document.getElementById('insufficientModal').style.display = 'flex';
+                db.collection('users').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        currentUserData = doc.data();
+                        document.getElementById('navUserName').textContent = currentUserData.displayName || 'Account';
+                        document.getElementById('navCredits').textContent = currentUserData.credits || 0;
+                        
+                        if (currentUserData.accountStatus === 'disabled') {
+                            showToast('Account disabled!', 'error');
+                            return;
+                        }
+                        
+                        showVerificationPopup(currentUserData.credits || 0, user.uid);
+                    } else {
+                        db.collection('users').doc(user.uid).set({
+                            uid: user.uid,
+                            displayName: user.displayName || 'User',
+                            email: user.email,
+                            credits: 0,
+                            accountStatus: 'active',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }).then(() => {
+                            showVerificationPopup(0, user.uid);
+                        });
+                    }
                 });
+            } else {
+                document.getElementById('toolkitMainContent').style.display = 'none';
+                document.getElementById('protectedAccess').style.display = 'flex';
+                document.getElementById('guestButtons').style.display = 'flex';
+                document.getElementById('userLoggedIn').style.display = 'none';
             }
         });
-    } else {
-        document.getElementById('protectedAccess').style.display = 'flex';
-        document.getElementById('guestButtons').style.display = 'flex';
-        document.getElementById('userLoggedIn').style.display = 'none';
-    }
-});
         
         function showVerificationPopup(credits, userId) {
             const remaining = credits - 20;
@@ -318,4 +319,4 @@ auth.onAuthStateChanged(function(user) {
         }
     </script>
 </body>
-    </html>
+                                                                                                                                                  </html>
