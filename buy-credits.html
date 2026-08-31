@@ -11,10 +11,10 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/buy-credits.css">
     
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
     <script>
         const firebaseConfig = {
@@ -29,6 +29,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
     </script>
 </head>
 <body class="buy-credits-page">
@@ -36,7 +37,6 @@
     <div class="bg-glow-purple"></div>
     <div class="bg-glow-blue"></div>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="nav-logo">
@@ -97,7 +97,6 @@
         </div>
     </nav>
 
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-inner">
             <a href="index.html" class="sidebar-link"><i class="fas fa-home"></i><span>Home</span></a>
@@ -114,19 +113,15 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content buy-credits-main">
         <div class="page-header">
             <h1 class="page-title">Buy <span class="gradient-text">Credits</span></h1>
             <p class="page-description">Choose a package to get started</p>
         </div>
 
-        <!-- Login Required -->
         <div id="loginRequired" style="display: none;">
             <div class="protected-box">
-                <div class="protected-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
+                <div class="protected-icon"><i class="fas fa-lock"></i></div>
                 <h2>Login Required</h2>
                 <p>Please login to buy credits</p>
                 <div class="protected-actions">
@@ -140,10 +135,8 @@
             </div>
         </div>
 
-        <!-- Pricing Cards -->
-        <div id="pricingContent" style="display: none;">
+        <div id="pricingContent">
             <div class="pricing-grid">
-                <!-- 50 Credits -->
                 <div class="pricing-card">
                     <div class="pricing-badge">Starter</div>
                     <div class="pricing-icon"><i class="fas fa-coins"></i></div>
@@ -153,12 +146,11 @@
                         <span><i class="fas fa-check"></i> 50 Tool Access</span>
                         <span><i class="fas fa-check"></i> Valid Forever</span>
                     </div>
-                    <button class="select-package-btn" onclick="selectPackage(50, 120)">
+                    <button class="select-package-btn" onclick="selectPackage(50, 120, 'Starter')">
                         <i class="fas fa-shopping-cart"></i> Select Package
                     </button>
                 </div>
 
-                <!-- 100 Credits -->
                 <div class="pricing-card popular">
                     <div class="pricing-badge popular-badge">Most Popular</div>
                     <div class="pricing-icon"><i class="fas fa-coins"></i></div>
@@ -170,12 +162,11 @@
                         <span><i class="fas fa-check"></i> Best Value</span>
                         <span><i class="fas fa-check"></i> Valid Forever</span>
                     </div>
-                    <button class="select-package-btn" onclick="selectPackage(100, 210)">
+                    <button class="select-package-btn" onclick="selectPackage(100, 210, 'Most Popular')">
                         <i class="fas fa-shopping-cart"></i> Select Package
                     </button>
                 </div>
 
-                <!-- 250 Credits -->
                 <div class="pricing-card">
                     <div class="pricing-badge">Premium</div>
                     <div class="pricing-icon"><i class="fas fa-crown"></i></div>
@@ -187,136 +178,138 @@
                         <span><i class="fas fa-check"></i> Maximum Savings</span>
                         <span><i class="fas fa-check"></i> Valid Forever</span>
                     </div>
-                    <button class="select-package-btn" onclick="selectPackage(250, 400)">
+                    <button class="select-package-btn" onclick="selectPackage(250, 400, 'Premium')">
                         <i class="fas fa-shopping-cart"></i> Select Package
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Payment Modal -->
-        <div class="modal-overlay" id="paymentModal" style="display: none;">
-            <div class="modal-box payment-modal">
-                <button class="modal-close" onclick="closePaymentModal()">&times;</button>
-                <div class="modal-header">
-                    <h2>Complete Payment</h2>
-                    <p id="selectedPackageText">Selected Package</p>
-                </div>
-                
-                <div class="payment-methods">
-                    <h3>Select Payment Method</h3>
-                    <div class="payment-options">
-                        <label class="payment-option">
-                            <input type="radio" name="paymentMethod" value="easypaisa" checked>
-                            <i class="fas fa-mobile-alt"></i>
-                            <span>EasyPaisa</span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="paymentMethod" value="jazzcash">
-                            <i class="fas fa-wallet"></i>
-                            <span>JazzCash</span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="paymentMethod" value="bank">
-                            <i class="fas fa-university"></i>
-                            <span>Bank Transfer</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="payment-instructions" id="paymentInstructions">
-                    <!-- Filled dynamically -->
-                </div>
-
-                <div class="form-group">
-                    <label><i class="fas fa-user"></i> Your Name (as per payment)</label>
-                    <input type="text" id="payerName" placeholder="Enter your name" required>
-                </div>
-
-                <div class="form-group">
-                    <label><i class="fas fa-phone"></i> Phone Number</label>
-                    <input type="tel" id="payerPhone" placeholder="+92xxxxxxxxxx" required>
-                </div>
-
-                <div class="form-group">
-                    <label><i class="fas fa-sticky-note"></i> Transaction ID / Reference</label>
-                    <input type="text" id="transactionId" placeholder="Enter transaction ID" required>
-                </div>
-
-                <button class="submit-payment-btn" id="submitPaymentBtn" onclick="submitPaymentRequest()">
-                    <i class="fas fa-paper-plane"></i> Submit Payment Request
-                </button>
-            </div>
-        </div>
-
-        <!-- Auth Modal -->
-        <div class="modal-overlay" id="authModal" style="display: none;">
-            <div class="modal-box auth-modal">
-                <button class="modal-close" onclick="closeAuthModal()">&times;</button>
-                <div class="modal-header">
-                    <h2 id="authModalTitle">Login</h2>
-                    <p id="authModalSubtitle">Access your account</p>
-                </div>
-                <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
-                    <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <button type="submit" class="auth-submit-btn" id="loginBtn">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </button>
-                    <p class="auth-switch">
-                        Don't have an account? 
-                        <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
-                    </p>
-                </form>
-                <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Display Name</label>
-                        <input type="text" id="registerName" placeholder="Enter your name" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="registerEmail" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
-                        <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Confirm Password</label>
-                        <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
-                        <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <button type="submit" class="auth-submit-btn" id="registerBtn">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </button>
-                    <p class="auth-switch">
-                        Already have an account? 
-                        <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
-                    </p>
-                </form>
-            </div>
-        </div>
-
-        <div class="toast-container" id="toastContainer"></div>
-
-        <script src="js/script.js"></script>
-        <script src="js/auth.js"></script>
-        <script src="js/credits.js"></script>
-        <script src="js/buy-credits.js"></script>
     </main>
+
+    <!-- Payment Modal -->
+    <div class="modal-overlay" id="paymentModal" style="display: none;">
+        <div class="modal-box payment-modal">
+            <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+            <div class="modal-header">
+                <h2>Complete Payment</h2>
+                <p id="selectedPackageText"></p>
+            </div>
+
+            <div class="payment-account-info">
+                <h3><i class="fas fa-user-circle"></i> Payment Account Details</h3>
+                <div class="account-detail-row">
+                    <span>Account Name:</span>
+                    <strong>FATMIA TUL ZAHRA</strong>
+                </div>
+                <div class="account-detail-row">
+                    <span>Account Number:</span>
+                    <strong>03251138959</strong>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h3>Select Payment Method</h3>
+                <div class="payment-options">
+                    <label class="payment-option active" onclick="selectPaymentMethod('easypaisa', this)">
+                        <input type="radio" name="paymentMethod" value="easypaisa" checked>
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>EasyPaisa</span>
+                    </label>
+                    <label class="payment-option" onclick="selectPaymentMethod('jazzcash', this)">
+                        <input type="radio" name="paymentMethod" value="jazzcash">
+                        <i class="fas fa-wallet"></i>
+                        <span>JazzCash</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Your Name</label>
+                <input type="text" id="payerName" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Your Phone Number</label>
+                <input type="tel" id="payerPhone" placeholder="+92xxxxxxxxxx" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-sticky-note"></i> Transaction ID / Reference</label>
+                <input type="text" id="transactionId" placeholder="Enter transaction ID" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-camera"></i> Payment Screenshot</label>
+                <input type="file" id="paymentScreenshot" accept="image/*" onchange="previewScreenshot(event)">
+                <div class="screenshot-preview" id="screenshotPreview" style="display: none;">
+                    <img id="screenshotImg" src="" alt="Screenshot Preview">
+                </div>
+            </div>
+
+            <button class="submit-payment-btn" id="submitPaymentBtn" onclick="submitPaymentRequest()">
+                <i class="fas fa-paper-plane"></i> Submit Payment Request
+            </button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal" style="display: none;">
+        <div class="modal-box auth-modal">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            <div class="modal-header">
+                <h2 id="authModalTitle">Login</h2>
+                <p id="authModalSubtitle">Access your account</p>
+            </div>
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
+                </p>
+            </form>
+            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Display Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
+                </div>
+                <button type="submit" class="auth-submit-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <p class="auth-switch">
+                    Already have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/script.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/credits.js"></script>
+    <script src="js/buy-credits.js"></script>
 </body>
-</html>
+                           </html>
