@@ -1,37 +1,31 @@
 // =========================
-// FAHAD TECH - AUTHENTICATION (NO FLICKER FIX)
+// FAHAD TECH - AUTHENTICATION (FINAL FIXED)
 // =========================
 
 let currentUser = null;
 let currentUserData = null;
 let userStatusListener = null;
 
-// Page load hote hi - TURANT check from localStorage
-document.addEventListener('DOMContentLoaded', function() {
-    // Pehle localStorage se check karo
-    const savedUser = localStorage.getItem('fahad_tech_user');
-    if (savedUser) {
-        try {
-            currentUserData = JSON.parse(savedUser);
-            currentUser = { uid: currentUserData.uid, email: currentUserData.email, displayName: currentUserData.displayName };
-            
-            // UI turant update karo - NO FLICKER
-            const guestButtons = document.getElementById('guestButtons');
-            const userLoggedIn = document.getElementById('userLoggedIn');
-            if (guestButtons) guestButtons.style.display = 'none';
-            if (userLoggedIn) userLoggedIn.style.display = 'flex';
-            
-            const navUserName = document.getElementById('navUserName');
-            const navCredits = document.getElementById('navCredits');
-            if (navUserName) navUserName.textContent = currentUserData.displayName || 'Account';
-            if (navCredits) navCredits.textContent = currentUserData.credits || 0;
-        } catch(e) {
-            localStorage.removeItem('fahad_tech_user');
-        }
+// ============ INSTANT CHECK - SYNC ============
+(function() {
+    const user = auth.currentUser;
+    if (user) {
+        currentUser = user;
+        const guestButtons = document.getElementById('guestButtons');
+        const userLoggedIn = document.getElementById('userLoggedIn');
+        if (guestButtons) guestButtons.style.display = 'none';
+        if (userLoggedIn) userLoggedIn.style.display = 'flex';
+        
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists) {
+                currentUserData = doc.data();
+                updateUserUI(user, currentUserData);
+            }
+        }).catch(() => {});
     }
-});
+})();
 
-// Auth state listener
+// ============ AUTH LISTENER ============
 auth.onAuthStateChanged(function(user) {
     if (user) {
         currentUser = user;
@@ -39,22 +33,17 @@ auth.onAuthStateChanged(function(user) {
     } else {
         currentUser = null;
         currentUserData = null;
-        localStorage.removeItem('fahad_tech_user');
         showGuestState();
     }
 });
 
-// Real-time user listener
+// ============ REAL-TIME USER LISTENER ============
 function startUserListener(user) {
     if (userStatusListener) userStatusListener();
     
     userStatusListener = db.collection('users').doc(user.uid).onSnapshot(function(doc) {
         if (doc.exists) {
             currentUserData = doc.data();
-            
-            // LOCAL STORAGE ME SAVE KARO - next page load ke liye
-            localStorage.setItem('fahad_tech_user', JSON.stringify(currentUserData));
-            
             updateUserUI(user, currentUserData);
             
             if (window.location.pathname.includes('account.html')) {
@@ -62,9 +51,11 @@ function startUserListener(user) {
             }
             
             if (currentUserData.accountStatus === 'disabled') {
-                showToast('Account disabled!', 'error');
-                localStorage.removeItem('fahad_tech_user');
-                setTimeout(() => { auth.signOut(); window.location.href = 'index.html'; }, 2000);
+                showToast('Account disabled by admin!', 'error');
+                setTimeout(() => {
+                    auth.signOut();
+                    window.location.href = 'index.html';
+                }, 2000);
             }
         } else {
             createUserDocument(user);
@@ -78,15 +69,12 @@ function loadUserData(user) {
     db.collection('users').doc(user.uid).get().then((doc) => {
         if (doc.exists) {
             currentUserData = doc.data();
-            localStorage.setItem('fahad_tech_user', JSON.stringify(currentUserData));
             updateUserUI(user, currentUserData);
             if (window.location.pathname.includes('account.html')) displayAccountData(currentUserData);
         } else {
             createUserDocument(user);
         }
-    }).catch((error) => {
-        console.error("Error:", error);
-    });
+    }).catch(() => {});
 }
 
 function createUserDocument(user) {
@@ -98,9 +86,9 @@ function createUserDocument(user) {
     };
     db.collection('users').doc(user.uid).set(userData).then(() => {
         currentUserData = userData;
-        localStorage.setItem('fahad_tech_user', JSON.stringify(userData));
         updateUserUI(user, userData);
-    }).catch((error) => { console.error("Error:", error); });
+        if (window.location.pathname.includes('account.html')) displayAccountData(userData);
+    }).catch(() => {});
 }
 
 function updateUserUI(user, userData) {
@@ -140,6 +128,15 @@ function showGuestState() {
             <button class="mobile-auth-btn" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
         `;
     }
+    
+    if (window.location.pathname.includes('account.html')) {
+        const loadingEl = document.getElementById('accountLoading');
+        const contentEl = document.getElementById('accountContent');
+        const loginRequiredEl = document.getElementById('loginRequired');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'none';
+        if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
+    }
 }
 
 function displayAccountData(data) {
@@ -153,17 +150,51 @@ function displayAccountData(data) {
     const nameEl = document.getElementById('accountName');
     const emailEl = document.getElementById('accountEmail');
     const creditsEl = document.getElementById('accountCredits');
+    const statusEl = document.getElementById('accountStatus');
+    const memberSinceEl = document.getElementById('memberSince');
+    
     if (nameEl) nameEl.textContent = data.displayName || 'User';
     if (emailEl) emailEl.textContent = data.email || '';
     if (creditsEl) creditsEl.textContent = data.credits || 0;
+    
+    if (statusEl) {
+        if (data.accountStatus === 'disabled') {
+            statusEl.innerHTML = '<span class="status-dot disabled"></span><span>Disabled</span>';
+        } else {
+            statusEl.innerHTML = '<span class="status-dot active"></span><span>Active</span>';
+        }
+    }
+    
+    if (memberSinceEl && data.createdAt) {
+        try {
+            const date = data.createdAt.toDate();
+            memberSinceEl.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch(e) { memberSinceEl.textContent = 'N/A'; }
+    }
+}
+
+function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then((result) => {
+        const user = result.user;
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (!doc.exists) {
+                return db.collection('users').doc(user.uid).set({
+                    uid: user.uid, displayName: user.displayName || 'User', email: user.email,
+                    credits: 0, accountStatus: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }).then(() => { showToast('Google login successful!', 'success'); });
+    }).catch((error) => { showToast(error.message, 'error'); });
 }
 
 function openAuthModal(mode = 'login') {
     const modal = document.getElementById('authModal');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
     if (!modal) return;
     modal.style.display = 'flex';
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
     if (mode === 'login') {
         if (loginForm) loginForm.style.display = 'block';
         if (registerForm) registerForm.style.display = 'none';
@@ -212,6 +243,7 @@ function handleRegister(event) {
     if (password !== confirmPassword) { showToast('Passwords do not match', 'error'); return; }
     if (password.length < 6) { showToast('Password min 6 chars', 'error'); return; }
     registerBtn.disabled = true;
+    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
         const user = userCredential.user;
         return user.updateProfile({ displayName: name }).then(() => {
@@ -226,14 +258,15 @@ function handleRegister(event) {
         showToast('Account created!', 'success');
         closeAuthModal();
         registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
     }).catch((error) => {
         showToast(error.message, 'error');
         registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
     });
 }
 
 function logoutUser() {
-    localStorage.removeItem('fahad_tech_user');
     auth.signOut().then(() => {
         showToast('Logged out', 'success');
         setTimeout(() => { window.location.href = 'index.html'; }, 1000);
@@ -253,4 +286,4 @@ function showToast(message, type = 'info') {
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
-            }
+}
