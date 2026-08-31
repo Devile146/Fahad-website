@@ -154,9 +154,137 @@ document.addEventListener('DOMContentLoaded', function() {
     initMobileMenu();
 });
 
-// Render Themes
+// =========================
+// AUTHENTICATION CHECK
+// =========================
+
+function checkToolkitMakerAccess() {
+    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
+    const mainContent = document.getElementById('toolkitMainContent');
+    const protectedAccess = document.getElementById('protectedAccess');
+    const loadingText = document.getElementById('loadingText');
+    
+    if (!currentUser) {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        if (protectedAccess) protectedAccess.style.display = 'flex';
+        return;
+    }
+    
+    // Check account status
+    if (currentUserData && currentUserData.accountStatus === 'disabled') {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        if (protectedAccess) {
+            protectedAccess.innerHTML = `
+                <div class="protected-box">
+                    <div class="protected-icon">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <h2>Account Disabled</h2>
+                    <p>Your account is currently disabled. Please contact support.</p>
+                </div>
+            `;
+            protectedAccess.style.display = 'flex';
+        }
+        return;
+    }
+    
+    // Check credits
+    if (!currentUserData || currentUserData.credits < 20) {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        if (protectedAccess) protectedAccess.style.display = 'none';
+        
+        showInsufficientCredits(20);
+        return;
+    }
+    
+    // Deduct 20 credits for access
+    if (loadingText) loadingText.textContent = 'Deducting 20 credits...';
+    
+    deductCreditsForToolkit().then(() => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
+        if (protectedAccess) protectedAccess.style.display = 'none';
+        showToast('20 credits deducted for Toolkit Maker access', 'success');
+    }).catch((error) => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        if (protectedAccess) protectedAccess.style.display = 'none';
+        showToast(error.message, 'error');
+    });
+}
+
+function deductCreditsForToolkit() {
+    const userRef = db.collection('users').doc(currentUser.uid);
+    
+    return db.runTransaction((transaction) => {
+        return transaction.get(userRef).then((doc) => {
+            if (!doc.exists) {
+                throw new Error('User data not found');
+            }
+            
+            const userData = doc.data();
+            const currentCredits = userData.credits || 0;
+            
+            if (userData.accountStatus === 'disabled') {
+                throw new Error('Account is disabled');
+            }
+            
+            if (currentCredits < 20) {
+                throw new Error('Insufficient credits');
+            }
+            
+            const newCredits = currentCredits - 20;
+            
+            transaction.update(userRef, {
+                credits: newCredits,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            // Log transaction
+            const transactionLog = {
+                userId: currentUser.uid,
+                action: 'toolkit_maker_access',
+                details: 'Toolkit Maker access',
+                amount: -20,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('transactions').add(transactionLog);
+            
+            return newCredits;
+        });
+    }).then((newCredits) => {
+        if (currentUserData) {
+            currentUserData.credits = newCredits;
+        }
+        const navCredits = document.getElementById('navCredits');
+        if (navCredits) {
+            navCredits.textContent = newCredits;
+        }
+        return newCredits;
+    });
+}
+
+function showProtectedAccess() {
+    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
+    const mainContent = document.getElementById('toolkitMainContent');
+    const protectedAccess = document.getElementById('protectedAccess');
+    
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'none';
+    if (protectedAccess) protectedAccess.style.display = 'flex';
+}
+
+// =========================
+// RENDER THEMES
+// =========================
+
 function renderThemes() {
     const themesGrid = document.getElementById('themesGrid');
+    
     if (!themesGrid) return;
     
     themesGrid.innerHTML = themes.map(theme => `
@@ -231,15 +359,21 @@ function saveProduct() {
     const about = document.getElementById('productAbout').value.trim();
     const type = document.getElementById('productType').value;
     
-    if (!name) { showToast('Please enter product name', 'error'); return; }
-    if (!link) { showToast('Please enter product link', 'error'); return; }
+    if (!name) {
+        showToast('Please enter product name', 'error');
+        return;
+    }
+    if (!link) {
+        showToast('Please enter product link', 'error');
+        return;
+    }
     
     if (editingProductIndex >= 0) {
         products[editingProductIndex] = { name, link, about, type };
-        showToast('Product updated', 'success');
+        showToast('Product updated successfully', 'success');
     } else {
         products.push({ name, link, about, type });
-        showToast('Product added', 'success');
+        showToast('Product added successfully', 'success');
     }
     
     hideProductForm();
@@ -249,6 +383,7 @@ function saveProduct() {
 // Render Products
 function renderProducts() {
     const productsList = document.getElementById('productsList');
+    
     if (!productsList) return;
     
     if (products.length === 0) {
@@ -263,8 +398,12 @@ function renderProducts() {
                 <span class="product-item-type ${product.type}">${product.type}</span>
             </div>
             <div class="product-item-actions">
-                <button class="product-action-btn edit-action" onclick="editProduct(${index})"><i class="fas fa-edit"></i></button>
-                <button class="product-action-btn delete-action" onclick="deleteProduct(${index})"><i class="fas fa-trash"></i></button>
+                <button class="product-action-btn edit-action" onclick="editProduct(${index})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="product-action-btn delete-action" onclick="deleteProduct(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     `).join('');
@@ -296,10 +435,15 @@ function generateToolkit() {
     if (isGenerating) return;
     
     const toolkitName = document.getElementById('toolkitName').value.trim();
-    if (!toolkitName) { showToast('Please enter toolkit name', 'error'); return; }
+    
+    if (!toolkitName) {
+        showToast('Please enter toolkit name', 'error');
+        return;
+    }
     
     isGenerating = true;
     
+    // Show generation progress
     const progressDiv = document.getElementById('generationProgress');
     progressDiv.style.display = 'block';
     
@@ -320,6 +464,7 @@ function generateToolkit() {
         </div>
     `).join('');
     
+    // Simulate progress
     let stepIndex = 0;
     const interval = setInterval(() => {
         const steps = progressSteps.querySelectorAll('.progress-step');
@@ -355,7 +500,8 @@ function buildToolkitCode() {
     const theme = themes.find(t => t.id === selectedTheme) || themes[3];
     const profileImg = profileImageData || 'https://via.placeholder.com/150';
     
-    const productsHTML = products.map((product) => {
+    // Build products HTML
+    const productsHTML = products.map((product, index) => {
         const isFree = product.type === 'free';
         const buttonAction = isFree 
             ? `window.open('${product.link}', '_blank')` 
@@ -365,22 +511,23 @@ function buildToolkitCode() {
         <div class="tool-card" style="background: ${theme.cardBg}; border: 1px solid ${theme.accent}40; border-radius: 16px; padding: 25px; transition: all 0.3s ease;">
             <span class="badge" style="background: ${isFree ? 'rgba(74,222,128,0.15)' : 'rgba(255,215,0,0.15)'}; color: ${isFree ? '#4ade80' : '#ffd700'}; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;">${isFree ? 'FREE' : 'PREMIUM'}</span>
             <h3 style="color: ${theme.textColor}; font-size: 18px; font-weight: 700; margin: 12px 0 8px;">${product.name}</h3>
-            <p style="color: ${theme.textColor}99; font-size: 13px; margin-bottom: 20px;">${product.about || 'No description'}</p>
-            <button onclick="${buttonAction}" style="background: ${isFree ? theme.accent : '#ffd700'}; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">${isFree ? 'Visit Tool' : 'Purchase Now'}</button>
+            <p style="color: ${theme.textColor}99; font-size: 13px; margin-bottom: 20px;">${product.about || 'No description available'}</p>
+            <button onclick="${buttonAction}" style="background: ${isFree ? theme.accent : '#ffd700'}; color: ${isFree ? '#000000' : '#000000'}; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">${isFree ? 'Visit Tool' : 'Purchase Now'}</button>
         </div>`;
     }).join('');
     
+    // Build contact HTML
     const contactButtons = [];
     if (whatsapp) {
         const cleanNumber = whatsapp.replace(/[^0-9]/g, '');
-        contactButtons.push(`<a href="https://wa.me/${cleanNumber}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(74,222,128,0.15);color:#4ade80;font-size:22px;text-decoration:none;"><i class="fab fa-whatsapp"></i></a>`);
+        contactButtons.push(`<a href="https://wa.me/${cleanNumber}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(74,222,128,0.15);color:#4ade80;font-size:22px;text-decoration:none;transition:all 0.3s ease;"><i class="fab fa-whatsapp"></i></a>`);
     }
     if (telegram) {
         const cleanTelegram = telegram.replace('@', '');
-        contactButtons.push(`<a href="https://t.me/${cleanTelegram}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(59,130,246,0.15);color:#3B82F6;font-size:22px;text-decoration:none;"><i class="fab fa-telegram"></i></a>`);
+        contactButtons.push(`<a href="https://t.me/${cleanTelegram}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(59,130,246,0.15);color:#3B82F6;font-size:22px;text-decoration:none;transition:all 0.3s ease;"><i class="fab fa-telegram"></i></a>`);
     }
     if (youtube) {
-        contactButtons.push(`<a href="${youtube}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(255,77,145,0.15);color:#FF4D91;font-size:22px;text-decoration:none;"><i class="fab fa-youtube"></i></a>`);
+        contactButtons.push(`<a href="${youtube}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(255,77,145,0.15);color:#FF4D91;font-size:22px;text-decoration:none;transition:all 0.3s ease;"><i class="fab fa-youtube"></i></a>`);
     }
     
     const contactHTML = contactButtons.length > 0 ? `
@@ -389,13 +536,16 @@ function buildToolkitCode() {
         <div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap;">${contactButtons.join('')}</div>
     </div>` : '';
     
+    // Popup HTML
     const popupHTML = popupEnabled && contactButtons.length > 0 ? `
-    <div id="welcomePopup" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${theme.cardBg};backdrop-filter:blur(20px);border:1px solid ${theme.accent}40;border-radius:20px;padding:30px;text-align:center;z-index:1000;">
-        <h3 style="color:${theme.textColor};margin-bottom:10px;">Welcome to ${toolkitName}!</h3>
-        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">${contactButtons.join('')}</div>
+    <div id="welcomePopup" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${theme.cardBg};backdrop-filter:blur(20px);border:1px solid ${theme.accent}40;border-radius:20px;padding:30px;text-align:center;z-index:1000;box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+        <h3 style="color:${theme.textColor};margin-bottom:10px;">Welcome to ${toolkitName}! 🎉</h3>
+        <p style="color:${theme.textColor}99;margin-bottom:20px;">Join us and stay connected!</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">${contactButtons.join('')}</div>
         <button onclick="document.getElementById('welcomePopup').style.display='none'" style="background:${theme.accent};color:#000;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
     </div>` : '';
     
+    // Full generated code
     const fullCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -406,15 +556,65 @@ function buildToolkitCode() {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: '${theme.font}'; background: ${theme.bg}; color: ${theme.textColor}; min-height: 100vh; overflow-x: hidden; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; padding: 40px 20px; }
-        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid ${theme.accent}; margin-bottom: 20px; }
-        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
-        .about-text { font-size: 1rem; opacity: 0.8; max-width: 600px; margin: 0 auto; }
-        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
-        .tool-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-        footer { text-align: center; padding: 30px; margin-top: 40px; border-top: 1px solid ${theme.accent}20; font-size: 0.9rem; opacity: 0.7; }
+        body {
+            font-family: '${theme.font}';
+            background: ${theme.bg};
+            color: ${theme.textColor};
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid ${theme.accent};
+            box-shadow: 0 0 30px ${theme.accent}40;
+            animation: pulse 3s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        .about-text {
+            font-size: 1rem;
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 40px;
+            border-top: 1px solid ${theme.accent}20;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -425,9 +625,13 @@ function buildToolkitCode() {
             <h1>${toolkitName}</h1>
             ${toolkitAbout ? `<p class="about-text">${toolkitAbout}</p>` : ''}
         </div>
-        <div class="tools-grid">${productsHTML}</div>
+        <div class="tools-grid">
+            ${productsHTML}
+        </div>
         ${contactHTML}
-        <footer>© 2026 ${toolkitName}. All Rights Reserved.</footer>
+        <footer>
+            © 2026 ${toolkitName}. All Rights Reserved.
+        </footer>
     </div>
 </body>
 </html>`;
@@ -448,6 +652,7 @@ function runToolkit() {
     const code = document.getElementById('generatedCode').value;
     const previewModal = document.getElementById('previewModal');
     const previewFrame = document.getElementById('previewFrame');
+    
     previewModal.style.display = 'flex';
     previewFrame.srcdoc = code;
 }
@@ -462,11 +667,12 @@ function copyCode() {
     const codeBox = document.getElementById('generatedCode');
     codeBox.select();
     codeBox.setSelectionRange(0, 99999);
+    
     navigator.clipboard.writeText(codeBox.value).then(() => {
-        showToast('Code copied!', 'success');
+        showToast('Code copied successfully!', 'success');
     }).catch(() => {
         document.execCommand('copy');
-        showToast('Code copied!', 'success');
+        showToast('Code copied successfully!', 'success');
     });
 }
 
@@ -475,6 +681,7 @@ function downloadCode() {
     const code = document.getElementById('generatedCode').value;
     const toolkitName = document.getElementById('toolkitName').value.trim() || 'toolkit';
     const filename = toolkitName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.html';
+    
     const blob = new Blob([code], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -482,5 +689,6 @@ function downloadCode() {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Downloaded!', 'success');
-                }
+    
+    showToast('Toolkit downloaded successfully!', 'success');
+                    }
