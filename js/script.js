@@ -21,11 +21,18 @@ document.addEventListener('DOMContentLoaded', function() {
     initMobileMenu();
     initContactLinks();
     initProfileImage();
+    initAuthState();
     
     // Initialize tools if on tools page
     if (document.getElementById('toolsGrid')) {
-        renderTools('all');
-        checkUrlCategory();
+        // Load tools from Firestore first
+        loadToolsFromFirestore().then(() => {
+            renderTools('all');
+            checkUrlCategory();
+        }).catch(() => {
+            renderTools('all');
+            checkUrlCategory();
+        });
     }
 });
 
@@ -35,6 +42,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Auth State
 function initAuthState() {
+    if (typeof auth === 'undefined') return;
+    
     auth.onAuthStateChanged(function(user) {
         if (user) {
             currentUser = user;
@@ -150,15 +159,15 @@ function openAuthModal(mode = 'login') {
     modal.style.display = 'flex';
     
     if (mode === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
-        modalTitle.textContent = 'Login';
-        modalSubtitle.textContent = 'Access your account';
+        if (loginForm) loginForm.style.display = 'block';
+        if (registerForm) registerForm.style.display = 'none';
+        if (modalTitle) modalTitle.textContent = 'Login';
+        if (modalSubtitle) modalSubtitle.textContent = 'Access your account';
     } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        modalTitle.textContent = 'Create Account';
-        modalSubtitle.textContent = 'Join Fahad Tech Premium';
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'block';
+        if (modalTitle) modalTitle.textContent = 'Create Account';
+        if (modalSubtitle) modalSubtitle.textContent = 'Join Fahad Tech Premium';
     }
 }
 
@@ -246,11 +255,9 @@ function handleRegister(event) {
     auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
         const user = userCredential.user;
         
-        // Update profile with display name
         return user.updateProfile({
             displayName: name
         }).then(() => {
-            // Create user document in Firestore
             const userData = {
                 uid: user.uid,
                 displayName: name,
@@ -308,13 +315,11 @@ function checkToolAccess(category) {
         return;
     }
     
-    // Check credits
     if (!currentUserData || currentUserData.credits < 5) {
         showInsufficientCredits(5);
         return;
     }
     
-    // Deduct credits and navigate
     deductCredits(5, 'tool_access', category).then(() => {
         window.location.href = `tools.html?category=${category}`;
     }).catch((error) => {
@@ -388,22 +393,26 @@ function deductCredits(amount, action, details) {
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            // Log transaction
-            const transactionLog = {
-                userId: currentUser.uid,
-                action: action,
-                details: details,
-                amount: -amount,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('transactions').add(transactionLog);
-            
             return newCredits;
         });
     }).then((newCredits) => {
         currentUserData.credits = newCredits;
         updateCreditsDisplay(newCredits);
+        
+        // Log transaction
+        const transactionLog = {
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            action: action,
+            details: details,
+            amount: -amount,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        db.collection('transactions').add(transactionLog).catch((error) => {
+            console.error("Error logging transaction:", error);
+        });
+        
         showToast(`${amount} credits deducted`, 'success');
         return newCredits;
     });
@@ -453,8 +462,13 @@ function goToBuyCredits() {
 // =========================
 
 function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+    }
     
     const toast = document.createElement('div');
     toast.classList.add('toast', `toast-${type}`);
@@ -473,12 +487,10 @@ function showToast(message, type = 'info') {
     
     container.appendChild(toast);
     
-    // Animate in
     setTimeout(() => {
         toast.classList.add('show');
     }, 10);
     
-    // Remove after 3 seconds
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
@@ -561,12 +573,10 @@ function renderTools(category = 'all', searchTerm = '') {
     
     let filteredTools = toolsData;
     
-    // Filter by category
     if (category !== 'all') {
         filteredTools = filteredTools.filter(tool => tool.category === category);
     }
     
-    // Filter by search
     if (searchTerm) {
         filteredTools = filteredTools.filter(tool => 
             tool.name.toLowerCase().includes(searchTerm) ||
@@ -601,7 +611,7 @@ function renderTools(category = 'all', searchTerm = '') {
                 <div class="tool-icon">
                     <i class="${tool.icon}"></i>
                 </div>
-                <span class="tool-category-badge premium-badge"> PREMIUM</span>
+                <span class="tool-category-badge premium-badge">⭐ PREMIUM</span>
                 <h3>${tool.name}</h3>
                 <p>${tool.description}</p>
                 <button onclick="window.open('${CONFIG.PREMIUM_WHATSAPP}?text=${encodeURIComponent('Hello! I am interested in: ' + tool.name)}', '_blank')" class="tool-btn premium-btn">
@@ -631,7 +641,6 @@ function renderTools(category = 'all', searchTerm = '') {
 // =========================
 
 function filterTools(category) {
-    // Update active button
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.filter === category) {
@@ -710,7 +719,6 @@ function closeModal() {
 // EVENT LISTENERS
 // =========================
 
-// Close modal on outside click
 window.onclick = function(event) {
     const modal = document.getElementById('visitModal');
     if (event.target === modal) {
@@ -728,18 +736,10 @@ window.onclick = function(event) {
     }
 };
 
-// Close modal on Escape
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeModal();
         closeAuthModal();
         closeInsufficientModal();
-    }
-});
-
-// Initialize authentication state
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof auth !== 'undefined') {
-        initAuthState();
     }
 });
