@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize tools if on tools page
     if (document.getElementById('toolsGrid')) {
-        // Load tools from Firestore first
         loadToolsFromFirestore().then(() => {
             renderTools('all');
             checkUrlCategory();
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // AUTHENTICATION FUNCTIONS
 // =========================
 
-// Initialize Auth State
 function initAuthState() {
     if (typeof auth === 'undefined') return;
     
@@ -56,23 +54,19 @@ function initAuthState() {
     });
 }
 
-// Load User Data from Firestore
 function loadUserData(user) {
     db.collection('users').doc(user.uid).get().then((doc) => {
         if (doc.exists) {
             currentUserData = doc.data();
             updateUserUI(user, currentUserData);
         } else {
-            // Create user document if doesn't exist
             createUserDocument(user);
         }
     }).catch((error) => {
         console.error("Error loading user data:", error);
-        showToast('Error loading user data', 'error');
     });
 }
 
-// Create User Document
 function createUserDocument(user) {
     const userData = {
         uid: user.uid,
@@ -93,7 +87,6 @@ function createUserDocument(user) {
     });
 }
 
-// Update User UI
 function updateUserUI(user, userData) {
     const guestButtons = document.getElementById('guestButtons');
     const userLoggedIn = document.getElementById('userLoggedIn');
@@ -125,7 +118,6 @@ function updateUserUI(user, userData) {
     }
 }
 
-// Show Guest State
 function showGuestState() {
     const guestButtons = document.getElementById('guestButtons');
     const userLoggedIn = document.getElementById('userLoggedIn');
@@ -146,7 +138,6 @@ function showGuestState() {
     }
 }
 
-// Open Auth Modal
 function openAuthModal(mode = 'login') {
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
@@ -171,7 +162,6 @@ function openAuthModal(mode = 'login') {
     }
 }
 
-// Close Auth Modal
 function closeAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) {
@@ -179,12 +169,10 @@ function closeAuthModal() {
     }
 }
 
-// Switch Auth Mode
 function switchAuthMode(mode) {
     openAuthModal(mode);
 }
 
-// Toggle Password Visibility
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     if (input) {
@@ -196,7 +184,6 @@ function togglePassword(inputId) {
     }
 }
 
-// Handle Login
 function handleLogin(event) {
     event.preventDefault();
     
@@ -224,7 +211,6 @@ function handleLogin(event) {
     });
 }
 
-// Handle Register
 function handleRegister(event) {
     event.preventDefault();
     
@@ -282,7 +268,6 @@ function handleRegister(event) {
     });
 }
 
-// Logout User
 function logoutUser() {
     auth.signOut().then(() => {
         showToast('Logged out successfully', 'success');
@@ -294,7 +279,6 @@ function logoutUser() {
     });
 }
 
-// Go to Account
 function goToAccount() {
     window.location.href = 'account.html';
 }
@@ -303,7 +287,6 @@ function goToAccount() {
 // CREDIT FUNCTIONS
 // =========================
 
-// Check Tool Access
 function checkToolAccess(category) {
     if (!currentUser) {
         openAuthModal('login');
@@ -327,7 +310,6 @@ function checkToolAccess(category) {
     });
 }
 
-// Process Tool Access
 function processToolAccess() {
     if (isProcessingTool) return;
     
@@ -365,7 +347,6 @@ function processToolAccess() {
     });
 }
 
-// Deduct Credits
 function deductCredits(amount, action, details) {
     const userRef = db.collection('users').doc(currentUser.uid);
     
@@ -399,7 +380,6 @@ function deductCredits(amount, action, details) {
         currentUserData.credits = newCredits;
         updateCreditsDisplay(newCredits);
         
-        // Log transaction
         const transactionLog = {
             userId: currentUser.uid,
             userEmail: currentUser.email,
@@ -418,7 +398,6 @@ function deductCredits(amount, action, details) {
     });
 }
 
-// Update Credits Display
 function updateCreditsDisplay(credits) {
     const navCredits = document.getElementById('navCredits');
     if (navCredits) {
@@ -426,7 +405,6 @@ function updateCreditsDisplay(credits) {
     }
 }
 
-// Show Insufficient Credits
 function showInsufficientCredits(required) {
     const modal = document.getElementById('insufficientModal');
     const currentCreditsDisplay = document.getElementById('currentCreditsDisplay');
@@ -443,7 +421,6 @@ function showInsufficientCredits(required) {
     }
 }
 
-// Close Insufficient Credits Modal
 function closeInsufficientModal() {
     const modal = document.getElementById('insufficientModal');
     if (modal) {
@@ -451,7 +428,6 @@ function closeInsufficientModal() {
     }
 }
 
-// Go to Buy Credits
 function goToBuyCredits() {
     closeInsufficientModal();
     window.location.href = 'buy-credits.html';
