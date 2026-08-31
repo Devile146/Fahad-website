@@ -1,18 +1,49 @@
 // =========================
-// FAHAD TECH - AUTHENTICATION
+// FAHAD TECH - AUTHENTICATION (FINAL COMPLETE)
 // =========================
+
+let currentUser = null;
+let currentUserData = null;
 
 // Auth state listener
 auth.onAuthStateChanged(function(user) {
     if (user) {
         currentUser = user;
-        loadUserData(user);
+        startUserListener(user);
     } else {
         currentUser = null;
         currentUserData = null;
         showGuestState();
     }
 });
+
+// Real-time user listener
+function startUserListener(user) {
+    db.collection('users').doc(user.uid).onSnapshot(function(doc) {
+        if (doc.exists) {
+            currentUserData = doc.data();
+            updateUserUI(user, currentUserData);
+            
+            // Account page
+            if (window.location.pathname.includes('account.html')) {
+                displayAccountData(currentUserData);
+            }
+            
+            // Disabled check
+            if (currentUserData.accountStatus === 'disabled') {
+                showToast('Your account has been disabled by admin!', 'error');
+                setTimeout(() => {
+                    auth.signOut();
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        } else {
+            createUserDocument(user);
+        }
+    }, function(error) {
+        console.error("Listener error:", error);
+    });
+}
 
 // Load user data from Firestore
 function loadUserData(user) {
@@ -21,7 +52,6 @@ function loadUserData(user) {
             currentUserData = doc.data();
             updateUserUI(user, currentUserData);
             
-            // Account page load
             if (window.location.pathname.includes('account.html')) {
                 displayAccountData(currentUserData);
             }
@@ -31,7 +61,6 @@ function loadUserData(user) {
     }).catch((error) => {
         console.error("Error loading user data:", error);
         
-        // Account page error
         if (window.location.pathname.includes('account.html')) {
             const loadingEl = document.getElementById('accountLoading');
             const loginRequiredEl = document.getElementById('loginRequired');
@@ -159,7 +188,6 @@ function showGuestState() {
         `;
     }
     
-    // Account page - show login required
     if (window.location.pathname.includes('account.html')) {
         const loadingEl = document.getElementById('accountLoading');
         const contentEl = document.getElementById('accountContent');
@@ -169,6 +197,30 @@ function showGuestState() {
         if (contentEl) contentEl.style.display = 'none';
         if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
     }
+}
+
+// Google Login
+function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then((result) => {
+        const user = result.user;
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (!doc.exists) {
+                return db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    displayName: user.displayName || 'User',
+                    email: user.email,
+                    credits: 0,
+                    accountStatus: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }).then(() => {
+            showToast('Google login successful!', 'success');
+        });
+    }).catch((error) => {
+        showToast(error.message, 'error');
+    });
 }
 
 // Open auth modal
@@ -324,6 +376,12 @@ function goToAccount() {
     window.location.href = 'account.html';
 }
 
+// Update credits display
+function updateCreditsDisplay(credits) {
+    const navCredits = document.getElementById('navCredits');
+    if (navCredits) navCredits.textContent = credits;
+}
+
 // Toast notification
 function showToast(message, type = 'info') {
     let container = document.getElementById('toastContainer');
@@ -361,4 +419,4 @@ function showToast(message, type = 'info') {
             toast.remove();
         }, 300);
     }, 3000);
-        }
+}
