@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Toolkit Maker - Fahad Tech</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/toolkit-maker.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHJflwa4XJ9koDqfsQ2tOCDm93TTUhKqA",
+            authDomain: "fahad-tech-website.firebaseapp.com",
+            projectId: "fahad-tech-website",
+            storageBucket: "fahad-tech-website.firebasestorage.app",
+            messagingSenderId: "487340113323",
+            appId: "1:487340113323:web:6c0923e8c95b4064e5a6ee"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+</head>
+<body class="toolkit-page">
+    <div class="page-background"></div>
+    <div class="bg-glow-purple"></div>
+    <div class="bg-glow-blue"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="toolkitLoadingOverlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <p id="loadingText">Checking Access...</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-icon">FT</div>
+                <div class="logo-text">
+                    <span class="logo-name">FAHAD TECH</span>
+                    <span class="logo-tagline">Premium Platform</span>
+                </div>
+            </a>
+            
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="tools.html" class="nav-link">Tools</a>
+                <a href="categories.html" class="nav-link">Categories</a>
+                <a href="toolkit-maker.html" class="nav-link active">Toolkit Maker</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+            </div>
+            
+            <div class="nav-right">
+                <!-- User Account Area -->
+                <div class="user-account-area" id="userAccountArea">
+                    <!-- Guest State -->
+                    <div class="guest-buttons" id="guestButtons">
+                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </button>
+                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')">
+                            <i class="fas fa-user-plus"></i>
+                            Create Account
+                        </button>
+                    </div>
+                    
+                    <!-- Logged In State -->
+                    <div class="user-logged-in" id="userLoggedIn" style="display: none;">
+                        <div class="user-credits-display">
+                            <i class="fas fa-coins"></i>
+                            <span id="navCredits">0</span>
+                            <span class="credits-label">Credits</span>
+                        </div>
+                        <div class="user-profile-menu">
+                            <button class="profile-btn" onclick="goToAccount()">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="navUserName">Account</span>
+                            </button>
+                            <button class="logout-btn" onclick="logoutUser()">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="hamburger" id="hamburgerBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="index.html">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="categories.html">Categories</a>
+            <a href="toolkit-maker.html" class="active">Toolkit Maker</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <div class="mobile-auth-area" id="mobileAuthArea">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-inner">
+            <a href="index.html" class="sidebar-link">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="tools.html" class="sidebar-link">
+                <i class="fas fa-tools"></i>
+                <span>Tools</span>
+            </a>
+            <a href="categories.html" class="sidebar-link">
+                <i class="fas fa-th-large"></i>
+                <span>Categories</span>
+            </a>
+            <a href="toolkit-maker.html" class="sidebar-link active">
+                <i class="fas fa-magic"></i>
+                <span>Toolkit Maker</span>
+            </a>
+            <a href="about.html" class="sidebar-link">
+                <i class="fas fa-user"></i>
+                <span>About</span>
+            </a>
+            <a href="contact.html" class="sidebar-link">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <a href="https://wa.me/923251138960" target="_blank" class="sidebar-social"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://t.me/fahad_tricks_bot" target="_blank" class="sidebar-social"><i class="fab fa-telegram"></i></a>
+            <a href="mailto:fahadali2727@gmail.com" class="sidebar-social"><i class="fas fa-envelope"></i></a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content toolkit-main" id="toolkitMainContent" style="display: none;">
+        <div class="toolkit-header">
+            <h1 class="page-title"> <span class="gradient-text">Toolkit Maker</span></h1>
+            <p class="page-description">Create your own premium toolkit website in minutes</p>
+        </div>
+
+        <!-- Toolkit Builder Form -->
+        <div class="toolkit-builder">
+            <!-- Section 1: Toolkit Information -->
+            <div class="builder-section">
+                <h2 class="builder-section-title"><i class="fas fa-info-circle"></i> Toolkit Information</h2>
+                <div class="builder-form">
+                    <div class="form-group">
+                        <label>Toolkit Name *</label>
+                        <input type="text" id="toolkitName" placeholder="e.g., My Premium Tools" required>
+                    </div>
+                    <div class="form-group">
+                        <label>About Toolkit</label>
+                        <textarea id="toolkitAbout" rows="3" placeholder="Describe your toolkit..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Profile Image Upload</label>
+                            <input type="file" id="profileImageUpload" accept="image/*" onchange="handleImageUpload(event)">
+                        </div>
+                        <div class="form-group">
+                            <label>Or Image URL</label>
+                            <input type="url" id="profileImageUrl" placeholder="https://imgbb.com/your-image" onchange="previewImageUrl()">
+                        </div>
+                    </div>
+                    <div class="profile-preview" id="profilePreview" style="display:none;">
+                        <img id="profilePreviewImg" src="" alt="Profile Preview">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Products/Tools -->
+            <div class="builder-section">
+                <h2 class="builder-section-title"><i class="fas fa-box"></i> Add Products/Tools</h2>
+                <div class="products-list" id="productsList"></div>
+                <button class="add-product-btn" onclick="showProductForm()">
+                    <i class="fas fa-plus"></i> Add Product
+                </button>
+                <div class="product-form" id="productForm" style="display:none;">
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <input type="text" id="productName" placeholder="e.g., AI Tool Pro">
+                    </div>
+                    <div class="form-group">
+                        <label>Product Link *</label>
+                        <input type="url" id="productLink" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label>About Product</label>
+                        <textarea id="productAbout" rows="2" placeholder="Short description..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Type</label>
+                        <select id="productType">
+                            <option value="free">FREE</option>
+                            <option value="premium">PREMIUM</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button class="save-btn" onclick="saveProduct()"><i class="fas fa-check"></i> Save Product</button>
+                        <button class="cancel-btn" onclick="hideProductForm()"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Get In Touch -->
+            <div class="builder-section">
+                <h2 class="builder-section-title"><i class="fas fa-address-book"></i> Get In Touch (Optional)</h2>
+                <div class="builder-form">
+                    <div class="form-group">
+                        <label>WhatsApp Number</label>
+                        <input type="tel" id="whatsappNumber" placeholder="+92xxxxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>Telegram Username</label>
+                        <input type="text" id="telegramUsername" placeholder="@username">
+                    </div>
+                    <div class="form-group">
+                        <label>YouTube Channel Link</label>
+                        <input type="url" id="youtubeLink" placeholder="https://youtube.com/@channel">
+                    </div>
+                    <div class="form-group toggle-group">
+                        <label>POP UP CONTACT PAGE</label>
+                        <label class="switch">
+                            <input type="checkbox" id="popupToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Theme Selector -->
+            <div class="builder-section">
+                <h2 class="builder-section-title"><i class="fas fa-palette"></i> Select Theme</h2>
+                <div class="themes-grid" id="themesGrid">
+                    <!-- Themes will be generated by JS -->
+                </div>
+            </div>
+
+            <!-- Section 5: Generate -->
+            <div class="builder-section generate-section">
+                <button class="generate-btn" onclick="generateToolkit()">
+                    <i class="fas fa-rocket"></i> CREATE MY TOOLKIT
+                </button>
+                <div class="generation-progress" id="generationProgress" style="display:none;">
+                    <div class="progress-steps" id="progressSteps"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Code Output -->
+        <div class="generated-output" id="generatedOutput" style="display:none;">
+            <div class="code-header">
+                <div class="code-title">
+                    <i class="fas fa-code"></i> Your Website Code
+                </div>
+                <div class="code-actions">
+                    <button class="code-btn run-btn" onclick="runToolkit()">
+                        <i class="fas fa-play"></i> Run
+                    </button>
+                    <button class="code-btn copy-btn" onclick="copyCode()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="code-btn download-btn" onclick="downloadCode()">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+            <textarea id="generatedCode" class="code-box" readonly></textarea>
+        </div>
+    </main>
+
+    <!-- Protected Access Required -->
+    <div class="protected-access" id="protectedAccess" style="display: none;">
+        <div class="protected-box">
+            <div class="protected-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2>Access Required</h2>
+            <p>Please login to access the Toolkit Maker</p>
+            <div class="protected-actions">
+                <button class="btn-primary" onclick="openAuthModal('login')">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+                <button class="btn-secondary" onclick="openAuthModal('register')">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal" style="display: none;">
+        <div class="modal-box auth-modal">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            <div class="modal-header">
+                <h2 id="authModalTitle">Login</h2>
+                <p id="authModalSubtitle">Access your account</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
+                </p>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Display Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+                <p class="auth-switch">
+                    Already have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Insufficient Credits Modal -->
+    <div class="modal-overlay" id="insufficientModal" style="display: none;">
+        <div class="modal-box insufficient-modal">
+            <button class="modal-close" onclick="closeInsufficientModal()">&times;</button>
+            <div class="modal-header">
+                <div class="insufficient-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h2>Insufficient Credits</h2>
+                <p>You need 20 credits to access Toolkit Maker</p>
+            </div>
+            <div class="credits-info">
+                <div class="credit-row">
+                    <span>Current Credits:</span>
+                    <strong id="currentCreditsDisplay">0</strong>
+                </div>
+                <div class="credit-row">
+                    <span>Required Credits:</span>
+                    <strong id="requiredCreditsDisplay">20</strong>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="buy-credits-btn" onclick="goToBuyCredits()">
+                    <i class="fas fa-shopping-cart"></i>
+                    Buy Credits
+                </button>
+                <button class="close-modal-btn" onclick="closeInsufficientModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="previewModal" style="display:none;">
+        <div class="preview-modal-header">
+            <span>Toolkit Preview</span>
+            <button onclick="closePreview()"><i class="fas fa-times"></i></button>
+        </div>
+        <iframe id="previewFrame" class="preview-frame"></iframe>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/toolkit-maker.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/credits.js"></script>
+    
+    <script>
+        // Initialize Firebase Auth State Detection
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                // User is logged in
+                loadUserData(user);
+                checkToolkitMakerAccess();
+            } else {
+                // User is logged out
+                showGuestState();
+                showProtectedAccess();
+            }
+        });
+    </script>
+</body>
+</html>
