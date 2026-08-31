@@ -2,32 +2,15 @@
 // BUY CREDITS - PAYMENT SYSTEM
 // =========================
 
-let selectedPackage = {
-    credits: 0,
-    price: 0
-};
-
 let currentUser = null;
 let currentUserData = null;
+let selectedPackage = { credits: 0, price: 0, label: '' };
+let selectedPaymentMethod = 'easypaisa';
+let paymentScreenshotFile = null;
 
-// Payment details
-const paymentDetails = {
-    easypaisa: {
-        name: 'FAHAD ALI',
-        number: '03251138960',
-        instructions: 'Send payment to the EasyPaisa number below and enter the transaction ID.'
-    },
-    jazzcash: {
-        name: 'FAHAD ALI',
-        number: '03251138960',
-        instructions: 'Send payment to the JazzCash number below and enter the transaction ID.'
-    },
-    bank: {
-        name: 'FAHAD ALI',
-        accountNumber: 'PK00XXXX0000000000000',
-        bankName: 'Bank Name',
-        instructions: 'Transfer payment to the bank account below and enter the reference number.'
-    }
+const PAYMENT_ACCOUNT = {
+    name: 'FATMIA TUL ZAHRA',
+    number: '03251138959'
 };
 
 // Auth state listener
@@ -35,7 +18,7 @@ auth.onAuthStateChanged(function(user) {
     if (user) {
         currentUser = user;
         loadUserData(user);
-        showPricingContent();
+        showPricing();
     } else {
         currentUser = null;
         currentUserData = null;
@@ -51,11 +34,11 @@ function loadUserData(user) {
             updateUserUI(user, currentUserData);
         }
     }).catch((error) => {
-        console.error("Error loading user data:", error);
+        console.error("Error loading user:", error);
     });
 }
 
-function showPricingContent() {
+function showPricing() {
     document.getElementById('loginRequired').style.display = 'none';
     document.getElementById('pricingContent').style.display = 'block';
 }
@@ -66,62 +49,47 @@ function showLoginRequired() {
 }
 
 // Select package
-function selectPackage(credits, price) {
+function selectPackage(credits, price, label) {
     if (!currentUser) {
         openAuthModal('login');
         return;
     }
     
-    selectedPackage.credits = credits;
-    selectedPackage.price = price;
-    
-    document.getElementById('selectedPackageText').textContent = 
-        `${credits} Credits - Rs. ${price}`;
-    
+    selectedPackage = { credits, price, label };
+    document.getElementById('selectedPackageText').textContent = `${credits} Credits - Rs. ${price} (${label})`;
     openPaymentModal();
 }
 
 // Open payment modal
 function openPaymentModal() {
-    const modal = document.getElementById('paymentModal');
-    modal.style.display = 'flex';
-    updatePaymentInstructions('easypaisa');
+    document.getElementById('paymentModal').style.display = 'flex';
 }
 
 // Close payment modal
 function closePaymentModal() {
-    const modal = document.getElementById('paymentModal');
-    modal.style.display = 'none';
+    document.getElementById('paymentModal').style.display = 'none';
 }
 
-// Update payment instructions based on method
-document.addEventListener('change', function(e) {
-    if (e.target.name === 'paymentMethod') {
-        updatePaymentInstructions(e.target.value);
-    }
-});
+// Select payment method
+function selectPaymentMethod(method, element) {
+    selectedPaymentMethod = method;
+    document.querySelectorAll('.payment-option').forEach(opt => {
+        opt.classList.remove('active');
+    });
+    element.classList.add('active');
+}
 
-function updatePaymentInstructions(method) {
-    const instructionsDiv = document.getElementById('paymentInstructions');
-    const details = paymentDetails[method];
-    
-    if (method === 'easypaisa' || method === 'jazzcash') {
-        instructionsDiv.innerHTML = `
-            <strong>${method === 'easypaisa' ? 'EasyPaisa' : 'JazzCash'} Payment Details:</strong>
-            <p>Name: ${details.name}</p>
-            <p>Number: ${details.number}</p>
-            <p>Amount: Rs. ${selectedPackage.price}</p>
-            <p style="margin-top: 5px;">${details.instructions}</p>
-        `;
-    } else {
-        instructionsDiv.innerHTML = `
-            <strong>Bank Transfer Details:</strong>
-            <p>Account Name: ${details.name}</p>
-            <p>Account Number: ${details.accountNumber}</p>
-            <p>Bank: ${details.bankName}</p>
-            <p>Amount: Rs. ${selectedPackage.price}</p>
-            <p style="margin-top: 5px;">${details.instructions}</p>
-        `;
+// Preview screenshot
+function previewScreenshot(event) {
+    const file = event.target.files[0];
+    if (file) {
+        paymentScreenshotFile = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('screenshotPreview').style.display = 'block';
+            document.getElementById('screenshotImg').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 }
 
@@ -135,7 +103,6 @@ function submitPaymentRequest() {
     const payerName = document.getElementById('payerName').value.trim();
     const payerPhone = document.getElementById('payerPhone').value.trim();
     const transactionId = document.getElementById('transactionId').value.trim();
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const submitBtn = document.getElementById('submitPaymentBtn');
     
     if (!payerName || !payerPhone || !transactionId) {
@@ -143,7 +110,7 @@ function submitPaymentRequest() {
         return;
     }
     
-    if (selectedPackage.credits === 0 || selectedPackage.price === 0) {
+    if (selectedPackage.credits === 0) {
         showToast('Please select a package', 'error');
         return;
     }
@@ -151,22 +118,47 @@ function submitPaymentRequest() {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
     
+    // Upload screenshot if exists
+    if (paymentScreenshotFile) {
+        const storageRef = storage.ref('payment-screenshots/' + currentUser.uid + '/' + Date.now() + '.jpg');
+        storageRef.put(paymentScreenshotFile).then((snapshot) => {
+            return snapshot.ref.getDownloadURL();
+        }).then((downloadURL) => {
+            savePaymentRequest(downloadURL, submitBtn);
+        }).catch((error) => {
+            console.error("Error uploading screenshot:", error);
+            savePaymentRequest(null, submitBtn);
+        });
+    } else {
+        savePaymentRequest(null, submitBtn);
+    }
+}
+
+function savePaymentRequest(screenshotURL, submitBtn) {
+    const payerName = document.getElementById('payerName').value.trim();
+    const payerPhone = document.getElementById('payerPhone').value.trim();
+    const transactionId = document.getElementById('transactionId').value.trim();
+    
     const requestData = {
         userId: currentUser.uid,
         userEmail: currentUser.email,
-        userName: currentUser.displayName || payerName,
+        userName: currentUserData ? currentUserData.displayName : payerName,
         packageCredits: selectedPackage.credits,
         packagePrice: selectedPackage.price,
-        paymentMethod: paymentMethod,
+        packageLabel: selectedPackage.label,
+        paymentMethod: selectedPaymentMethod,
+        paymentAccountName: PAYMENT_ACCOUNT.name,
+        paymentAccountNumber: PAYMENT_ACCOUNT.number,
         payerName: payerName,
         payerPhone: payerPhone,
         transactionId: transactionId,
+        paymentScreenshotURL: screenshotURL,
         status: 'pending',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     
-    db.collection('purchaseRequests').add(requestData).then((docRef) => {
+    db.collection('purchaseRequests').add(requestData).then(() => {
         showToast('Payment request submitted successfully!', 'success');
         closePaymentModal();
         submitBtn.disabled = false;
@@ -176,13 +168,15 @@ function submitPaymentRequest() {
         document.getElementById('payerName').value = '';
         document.getElementById('payerPhone').value = '';
         document.getElementById('transactionId').value = '';
+        document.getElementById('paymentScreenshot').value = '';
+        document.getElementById('screenshotPreview').style.display = 'none';
+        paymentScreenshotFile = null;
         
-        // Show pending status
         setTimeout(() => {
             showToast('Your request is pending. Credits will be added after approval.', 'info');
         }, 1500);
     }).catch((error) => {
-        showToast('Error submitting request: ' + error.message, 'error');
+        showToast('Error: ' + error.message, 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Payment Request';
     });
