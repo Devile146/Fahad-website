@@ -1,491 +1,513 @@
-<!DOCTYPE html>
+// =========================
+// TOOLKIT MAKER - MAIN SCRIPT
+// =========================
+
+// Themes Configuration
+const themes = [
+    {
+        id: 'hacker',
+        name: 'Hacker Type',
+        bg: 'linear-gradient(135deg, #0a0a0a, #001a00)',
+        accent: '#00ff00',
+        cardBg: 'rgba(0, 20, 0, 0.8)',
+        textColor: '#00ff00',
+        font: 'monospace'
+    },
+    {
+        id: 'clean',
+        name: 'Clean UI',
+        bg: 'linear-gradient(135deg, #f5f5f5, #ffffff)',
+        accent: '#3B82F6',
+        cardBg: 'rgba(255, 255, 255, 0.9)',
+        textColor: '#1a1a1a',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'neon',
+        name: 'Neon Cyber',
+        bg: 'linear-gradient(135deg, #0a0a2e, #1a0030)',
+        accent: '#ff00ff',
+        cardBg: 'rgba(20, 0, 40, 0.8)',
+        textColor: '#00ffff',
+        font: 'Orbitron, sans-serif'
+    },
+    {
+        id: 'glass',
+        name: 'Glassmorphism',
+        bg: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+        accent: '#6D5CFF',
+        cardBg: 'rgba(255, 255, 255, 0.1)',
+        textColor: '#F5F5FF',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'gradient',
+        name: 'Modern Gradient',
+        bg: 'linear-gradient(135deg, #667eea, #764ba2)',
+        accent: '#ffd700',
+        cardBg: 'rgba(255, 255, 255, 0.15)',
+        textColor: '#ffffff',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'dark',
+        name: 'Dark Premium',
+        bg: 'linear-gradient(135deg, #0a0a0a, #1a1a1a)',
+        accent: '#ffd700',
+        cardBg: 'rgba(30, 30, 30, 0.9)',
+        textColor: '#ffffff',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'minimal',
+        name: 'Minimal White',
+        bg: '#ffffff',
+        accent: '#333333',
+        cardBg: '#f8f8f8',
+        textColor: '#333333',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'futuristic',
+        name: 'Futuristic Blue',
+        bg: 'linear-gradient(135deg, #0a0a2e, #003366)',
+        accent: '#00d4ff',
+        cardBg: 'rgba(0, 40, 80, 0.8)',
+        textColor: '#00d4ff',
+        font: 'Orbitron, sans-serif'
+    },
+    {
+        id: 'purple',
+        name: 'Purple Galaxy',
+        bg: 'linear-gradient(135deg, #1a0030, #0a0a2e)',
+        accent: '#9b59b6',
+        cardBg: 'rgba(30, 0, 50, 0.8)',
+        textColor: '#d4a5ff',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'rgb',
+        name: 'RGB Tech',
+        bg: 'linear-gradient(45deg, #ff0000, #00ff00, #0000ff)',
+        accent: '#ffffff',
+        cardBg: 'rgba(0, 0, 0, 0.7)',
+        textColor: '#ffffff',
+        font: 'Orbitron, sans-serif'
+    },
+    {
+        id: 'elegant',
+        name: 'Elegant Professional',
+        bg: 'linear-gradient(135deg, #2c3e50, #3498db)',
+        accent: '#ecf0f1',
+        cardBg: 'rgba(255, 255, 255, 0.12)',
+        textColor: '#ecf0f1',
+        font: 'Georgia, serif'
+    },
+    {
+        id: 'colorful',
+        name: 'Colorful Modern',
+        bg: 'linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1)',
+        accent: '#ffffff',
+        cardBg: 'rgba(255, 255, 255, 0.2)',
+        textColor: '#ffffff',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'midnight',
+        name: 'Midnight Tech',
+        bg: 'linear-gradient(135deg, #0a0a1a, #1a1a3a)',
+        accent: '#4169e1',
+        cardBg: 'rgba(10, 10, 30, 0.8)',
+        textColor: '#87ceeb',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'aurora',
+        name: 'Aurora',
+        bg: 'linear-gradient(135deg, #00b4db, #0083b0, #00b4db)',
+        accent: '#ffd700',
+        cardBg: 'rgba(0, 60, 80, 0.7)',
+        textColor: '#ffffff',
+        font: 'Inter, sans-serif'
+    },
+    {
+        id: 'dashboard',
+        name: 'Advanced Dashboard',
+        bg: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+        accent: '#6D5CFF',
+        cardBg: 'rgba(255, 255, 255, 0.08)',
+        textColor: '#F5F5FF',
+        font: 'Inter, sans-serif'
+    }
+];
+
+// State
+let products = [];
+let selectedTheme = 'glass';
+let profileImageData = null;
+let editingProductIndex = -1;
+let isGenerating = false;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    renderThemes();
+    initMobileMenu();
+});
+
+// =========================
+// RENDER THEMES
+// =========================
+
+function renderThemes() {
+    const themesGrid = document.getElementById('themesGrid');
+    
+    if (!themesGrid) return;
+    
+    themesGrid.innerHTML = themes.map(theme => `
+        <div class="theme-card ${theme.id === selectedTheme ? 'selected' : ''}" 
+             onclick="selectTheme('${theme.id}')">
+            <div class="theme-preview-box" style="background: ${theme.bg}; border: 2px solid ${theme.accent};"></div>
+            <h4 style="color: ${theme.textColor};">${theme.name}</h4>
+            <div class="theme-check"><i class="fas fa-check-circle"></i></div>
+        </div>
+    `).join('');
+}
+
+// Select Theme
+function selectTheme(themeId) {
+    selectedTheme = themeId;
+    renderThemes();
+    showToast('Theme selected: ' + themeId, 'info');
+}
+
+// Handle Image Upload
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            profileImageData = e.target.result;
+            showProfilePreview(profileImageData);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Preview Image URL
+function previewImageUrl() {
+    const url = document.getElementById('profileImageUrl').value;
+    if (url) {
+        profileImageData = url;
+        showProfilePreview(url);
+    }
+}
+
+// Show Profile Preview
+function showProfilePreview(src) {
+    const preview = document.getElementById('profilePreview');
+    const img = document.getElementById('profilePreviewImg');
+    if (preview && img) {
+        img.src = src;
+        preview.style.display = 'block';
+    }
+}
+
+// Show Product Form
+function showProductForm() {
+    document.getElementById('productForm').style.display = 'flex';
+    document.getElementById('productName').focus();
+    editingProductIndex = -1;
+    document.getElementById('productName').value = '';
+    document.getElementById('productLink').value = '';
+    document.getElementById('productAbout').value = '';
+    document.getElementById('productType').value = 'free';
+}
+
+// Hide Product Form
+function hideProductForm() {
+    document.getElementById('productForm').style.display = 'none';
+}
+
+// Save Product
+function saveProduct() {
+    const name = document.getElementById('productName').value.trim();
+    const link = document.getElementById('productLink').value.trim();
+    const about = document.getElementById('productAbout').value.trim();
+    const type = document.getElementById('productType').value;
+    
+    if (!name) {
+        showToast('Please enter product name', 'error');
+        return;
+    }
+    if (!link) {
+        showToast('Please enter product link', 'error');
+        return;
+    }
+    
+    if (editingProductIndex >= 0) {
+        products[editingProductIndex] = { name, link, about, type };
+        showToast('Product updated successfully', 'success');
+    } else {
+        products.push({ name, link, about, type });
+        showToast('Product added successfully', 'success');
+    }
+    
+    hideProductForm();
+    renderProducts();
+}
+
+// Render Products
+function renderProducts() {
+    const productsList = document.getElementById('productsList');
+    
+    if (!productsList) return;
+    
+    if (products.length === 0) {
+        productsList.innerHTML = '<p style="color: #B8B8C8; font-size: 13px; text-align: center;">No products added yet.</p>';
+        return;
+    }
+    
+    productsList.innerHTML = products.map((product, index) => `
+        <div class="product-item">
+            <div class="product-item-info">
+                <span class="product-item-name">${product.name}</span>
+                <span class="product-item-type ${product.type}">${product.type}</span>
+            </div>
+            <div class="product-item-actions">
+                <button class="product-action-btn edit-action" onclick="editProduct(${index})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="product-action-btn delete-action" onclick="deleteProduct(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Edit Product
+function editProduct(index) {
+    const product = products[index];
+    editingProductIndex = index;
+    document.getElementById('productName').value = product.name;
+    document.getElementById('productLink').value = product.link;
+    document.getElementById('productAbout').value = product.about;
+    document.getElementById('productType').value = product.type;
+    document.getElementById('productForm').style.display = 'flex';
+    document.getElementById('productForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Delete Product
+function deleteProduct(index) {
+    if (confirm('Delete this product?')) {
+        products.splice(index, 1);
+        renderProducts();
+        showToast('Product deleted', 'info');
+    }
+}
+
+// Generate Toolkit
+function generateToolkit() {
+    if (isGenerating) return;
+    
+    const toolkitName = document.getElementById('toolkitName').value.trim();
+    
+    if (!toolkitName) {
+        showToast('Please enter toolkit name', 'error');
+        return;
+    }
+    
+    isGenerating = true;
+    
+    const progressDiv = document.getElementById('generationProgress');
+    progressDiv.style.display = 'block';
+    
+    const steps = [
+        'Preparing your toolkit...',
+        'Creating your selected theme...',
+        'Adding your products...',
+        'Setting up contact information...',
+        'Optimizing your website...',
+        'Finalizing your toolkit...'
+    ];
+    
+    const progressSteps = document.getElementById('progressSteps');
+    progressSteps.innerHTML = steps.map(step => `
+        <div class="progress-step">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>${step}</span>
+        </div>
+    `).join('');
+    
+    let stepIndex = 0;
+    const interval = setInterval(() => {
+        const steps = progressSteps.querySelectorAll('.progress-step');
+        if (stepIndex > 0) {
+            steps[stepIndex - 1].classList.remove('active');
+            steps[stepIndex - 1].classList.add('complete');
+            steps[stepIndex - 1].querySelector('i').className = 'fas fa-check-circle';
+        }
+        if (stepIndex < steps.length) {
+            steps[stepIndex].classList.add('active');
+            stepIndex++;
+        } else {
+            clearInterval(interval);
+            setTimeout(() => {
+                const code = buildToolkitCode();
+                showGeneratedCode(code);
+                isGenerating = false;
+                showToast('Toolkit generated successfully!', 'success');
+            }, 500);
+        }
+    }, 800);
+}
+
+// Build Toolkit Code
+function buildToolkitCode() {
+    const toolkitName = document.getElementById('toolkitName').value.trim();
+    const toolkitAbout = document.getElementById('toolkitAbout').value.trim();
+    const whatsapp = document.getElementById('whatsappNumber').value.trim();
+    const telegram = document.getElementById('telegramUsername').value.trim();
+    const youtube = document.getElementById('youtubeLink').value.trim();
+    const popupEnabled = document.getElementById('popupToggle').checked;
+    
+    const theme = themes.find(t => t.id === selectedTheme) || themes[3];
+    const profileImg = profileImageData || 'https://via.placeholder.com/150';
+    
+    const productsHTML = products.map((product, index) => {
+        const isFree = product.type === 'free';
+        const buttonAction = isFree 
+            ? `window.open('${product.link}', '_blank')` 
+            : `window.open('https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hello! I am interested in purchasing: ' + product.name)}', '_blank')`;
+        
+        return `
+        <div class="tool-card" style="background: ${theme.cardBg}; border: 1px solid ${theme.accent}40; border-radius: 16px; padding: 25px; transition: all 0.3s ease;">
+            <span class="badge" style="background: ${isFree ? 'rgba(74,222,128,0.15)' : 'rgba(255,215,0,0.15)'}; color: ${isFree ? '#4ade80' : '#ffd700'}; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;">${isFree ? 'FREE' : 'PREMIUM'}</span>
+            <h3 style="color: ${theme.textColor}; font-size: 18px; font-weight: 700; margin: 12px 0 8px;">${product.name}</h3>
+            <p style="color: ${theme.textColor}99; font-size: 13px; margin-bottom: 20px;">${product.about || 'No description available'}</p>
+            <button onclick="${buttonAction}" style="background: ${isFree ? theme.accent : '#ffd700'}; color: ${isFree ? '#000000' : '#000000'}; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">${isFree ? 'Visit Tool' : 'Purchase Now'}</button>
+        </div>`;
+    }).join('');
+    
+    const contactButtons = [];
+    if (whatsapp) {
+        const cleanNumber = whatsapp.replace(/[^0-9]/g, '');
+        contactButtons.push(`<a href="https://wa.me/${cleanNumber}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(74,222,128,0.15);color:#4ade80;font-size:22px;text-decoration:none;transition:all 0.3s ease;"><i class="fab fa-whatsapp"></i></a>`);
+    }
+    if (telegram) {
+        const cleanTelegram = telegram.replace('@', '');
+        contactButtons.push(`<a href="https://t.me/${cleanTelegram}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(59,130,246,0.15);color:#3B82F6;font-size:22px;text-decoration:none;transition:all 0.3s ease;"><i class="fab fa-telegram"></i></a>`);
+    }
+    if (youtube) {
+        contactButtons.push(`<a href="${youtube}" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;background:rgba(255,77,145,0.15);color:#FF4D91;font-size:22px;text-decoration:none;transition:all 0.3s ease;"><i class="fab fa-youtube"></i></a>`);
+    }
+    
+    const contactHTML = contactButtons.length > 0 ? `
+    <div class="contact-section" style="text-align:center;margin-top:40px;">
+        <h3 style="color: ${theme.textColor}; font-size:20px; margin-bottom:20px;">Get In Touch</h3>
+        <div style="display:flex;gap:15px;justify-content:center;flex-wrap:wrap;">${contactButtons.join('')}</div>
+    </div>` : '';
+    
+    const popupHTML = popupEnabled && contactButtons.length > 0 ? `
+    <div id="welcomePopup" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${theme.cardBg};backdrop-filter:blur(20px);border:1px solid ${theme.accent}40;border-radius:20px;padding:30px;text-align:center;z-index:1000;box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+        <h3 style="color:${theme.textColor};margin-bottom:10px;">Welcome to ${toolkitName}! 🎉</h3>
+        <p style="color:${theme.textColor}99;margin-bottom:20px;">Join us and stay connected!</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">${contactButtons.join('')}</div>
+        <button onclick="document.getElementById('welcomePopup').style.display='none'" style="background:${theme.accent};color:#000;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;">Cancel</button>
+    </div>` : '';
+    
+    const fullCode = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Toolkit Maker - Fahad Tech</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${toolkitName}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/toolkit-maker.css">
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDHJflwa4XJ9koDqfsQ2tOCDm93TTUhKqA",
-            authDomain: "fahad-tech-website.firebaseapp.com",
-            projectId: "fahad-tech-website",
-            storageBucket: "fahad-tech-website.firebasestorage.app",
-            messagingSenderId: "487340113323",
-            appId: "1:487340113323:web:6c0923e8c95b4064e5a6ee"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: '${theme.font}';
+            background: ${theme.bg};
+            color: ${theme.textColor};
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; padding: 40px 20px; }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid ${theme.accent}; box-shadow: 0 0 30px ${theme.accent}40; animation: pulse 3s ease-in-out infinite; margin-bottom: 20px; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; }
+        .about-text { font-size: 1rem; opacity: 0.8; max-width: 600px; margin: 0 auto; }
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
+        .tool-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        footer { text-align: center; padding: 30px; margin-top: 40px; border-top: 1px solid ${theme.accent}20; font-size: 0.9rem; opacity: 0.7; }
+    </style>
 </head>
-<body class="toolkit-page">
-    <div class="page-background"></div>
-    <div class="bg-glow-purple"></div>
-    <div class="bg-glow-blue"></div>
-
-    <!-- Auth Loading State -->
-    <div class="loading-overlay" id="authLoadingOverlay" style="display: flex;">
-        <div class="loading-box">
-            <div class="loading-spinner"></div>
-            <p>Loading...</p>
+<body>
+    ${popupHTML}
+    <div class="container">
+        <div class="header">
+            <img src="${profileImg}" alt="Profile" class="profile-img" onerror="this.src='https://via.placeholder.com/150'">
+            <h1>${toolkitName}</h1>
+            ${toolkitAbout ? `<p class="about-text">${toolkitAbout}</p>` : ''}
         </div>
+        <div class="tools-grid">${productsHTML}</div>
+        ${contactHTML}
+        <footer>© 2026 ${toolkitName}. All Rights Reserved.</footer>
     </div>
-
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">
-                <div class="logo-icon">FT</div>
-                <div class="logo-text">
-                    <span class="logo-name">FAHAD TECH</span>
-                    <span class="logo-tagline">Premium Platform</span>
-                </div>
-            </a>
-            
-            <div class="nav-center">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="tools.html" class="nav-link">Tools</a>
-                <a href="categories.html" class="nav-link">Categories</a>
-                <a href="toolkit-maker.html" class="nav-link active">Toolkit Maker</a>
-                <a href="about.html" class="nav-link">About</a>
-                <a href="contact.html" class="nav-link">Contact</a>
-            </div>
-            
-            <div class="nav-right">
-                <div class="user-account-area" id="userAccountArea">
-                    <div class="guest-buttons" id="guestButtons">
-                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </button>
-                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')">
-                            <i class="fas fa-user-plus"></i> Create Account
-                        </button>
-                    </div>
-                    
-                    <div class="user-logged-in" id="userLoggedIn" style="display: none;">
-                        <div class="user-credits-display">
-                            <i class="fas fa-coins"></i>
-                            <span id="navCredits">0</span>
-                            <span class="credits-label">Credits</span>
-                        </div>
-                        <div class="user-profile-menu">
-                            <button class="profile-btn" onclick="goToAccount()">
-                                <i class="fas fa-user-circle"></i>
-                                <span id="navUserName">Account</span>
-                            </button>
-                            <button class="logout-btn" onclick="logoutUser()">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="hamburger" id="hamburgerBtn">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
-        </div>
-        
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="index.html">Home</a>
-            <a href="tools.html">Tools</a>
-            <a href="categories.html">Categories</a>
-            <a href="toolkit-maker.html" class="active">Toolkit Maker</a>
-            <a href="about.html">About</a>
-            <a href="contact.html">Contact</a>
-            <div class="mobile-auth-area" id="mobileAuthArea"></div>
-        </div>
-    </nav>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-inner">
-            <a href="index.html" class="sidebar-link"><i class="fas fa-home"></i><span>Home</span></a>
-            <a href="tools.html" class="sidebar-link"><i class="fas fa-tools"></i><span>Tools</span></a>
-            <a href="categories.html" class="sidebar-link"><i class="fas fa-th-large"></i><span>Categories</span></a>
-            <a href="toolkit-maker.html" class="sidebar-link active"><i class="fas fa-magic"></i><span>Toolkit Maker</span></a>
-            <a href="about.html" class="sidebar-link"><i class="fas fa-user"></i><span>About</span></a>
-            <a href="contact.html" class="sidebar-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
-        </div>
-        <div class="sidebar-footer">
-            <a href="https://wa.me/923251138960" target="_blank" class="sidebar-social"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://t.me/fahad_tricks_bot" target="_blank" class="sidebar-social"><i class="fab fa-telegram"></i></a>
-            <a href="mailto:fahadali2727@gmail.com" class="sidebar-social"><i class="fas fa-envelope"></i></a>
-        </div>
-    </aside>
-
-    <!-- Main Content - HIDDEN until auth verified -->
-    <main class="main-content toolkit-main" id="toolkitMainContent" style="display: none;">
-        <div class="toolkit-header">
-            <h1 class="page-title">🛠️ <span class="gradient-text">Toolkit Maker</span></h1>
-            <p class="page-description">Create your own premium toolkit website in minutes</p>
-        </div>
-
-        <div class="toolkit-builder">
-            <div class="builder-section">
-                <h2 class="builder-section-title"><i class="fas fa-info-circle"></i> Toolkit Information</h2>
-                <div class="builder-form">
-                    <div class="form-group">
-                        <label>Toolkit Name *</label>
-                        <input type="text" id="toolkitName" placeholder="e.g., My Premium Tools" required>
-                    </div>
-                    <div class="form-group">
-                        <label>About Toolkit</label>
-                        <textarea id="toolkitAbout" rows="3" placeholder="Describe your toolkit..."></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Profile Image Upload</label>
-                            <input type="file" id="profileImageUpload" accept="image/*" onchange="handleImageUpload(event)">
-                        </div>
-                        <div class="form-group">
-                            <label>Or Image URL</label>
-                            <input type="url" id="profileImageUrl" placeholder="https://imgbb.com/your-image" onchange="previewImageUrl()">
-                        </div>
-                    </div>
-                    <div class="profile-preview" id="profilePreview" style="display:none;">
-                        <img id="profilePreviewImg" src="" alt="Profile Preview">
-                    </div>
-                </div>
-            </div>
-
-            <div class="builder-section">
-                <h2 class="builder-section-title"><i class="fas fa-box"></i> Add Products/Tools</h2>
-                <div class="products-list" id="productsList"></div>
-                <button class="add-product-btn" onclick="showProductForm()">
-                    <i class="fas fa-plus"></i> Add Product
-                </button>
-                <div class="product-form" id="productForm" style="display:none;">
-                    <div class="form-group">
-                        <label>Product Name *</label>
-                        <input type="text" id="productName" placeholder="e.g., AI Tool Pro">
-                    </div>
-                    <div class="form-group">
-                        <label>Product Link *</label>
-                        <input type="url" id="productLink" placeholder="https://...">
-                    </div>
-                    <div class="form-group">
-                        <label>About Product</label>
-                        <textarea id="productAbout" rows="2" placeholder="Short description..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Product Type</label>
-                        <select id="productType">
-                            <option value="free">FREE</option>
-                            <option value="premium">PREMIUM</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button class="save-btn" onclick="saveProduct()"><i class="fas fa-check"></i> Save Product</button>
-                        <button class="cancel-btn" onclick="hideProductForm()"><i class="fas fa-times"></i> Cancel</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="builder-section">
-                <h2 class="builder-section-title"><i class="fas fa-address-book"></i> Get In Touch (Optional)</h2>
-                <div class="builder-form">
-                    <div class="form-group">
-                        <label>WhatsApp Number</label>
-                        <input type="tel" id="whatsappNumber" placeholder="+92xxxxxxxxxx">
-                    </div>
-                    <div class="form-group">
-                        <label>Telegram Username</label>
-                        <input type="text" id="telegramUsername" placeholder="@username">
-                    </div>
-                    <div class="form-group">
-                        <label>YouTube Channel Link</label>
-                        <input type="url" id="youtubeLink" placeholder="https://youtube.com/@channel">
-                    </div>
-                    <div class="form-group toggle-group">
-                        <label>POP UP CONTACT PAGE</label>
-                        <label class="switch">
-                            <input type="checkbox" id="popupToggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="builder-section">
-                <h2 class="builder-section-title"><i class="fas fa-palette"></i> Select Theme</h2>
-                <div class="themes-grid" id="themesGrid"></div>
-            </div>
-
-            <div class="builder-section generate-section">
-                <button class="generate-btn" onclick="generateToolkit()">
-                    <i class="fas fa-rocket"></i> CREATE MY TOOLKIT
-                </button>
-                <div class="generation-progress" id="generationProgress" style="display:none;">
-                    <div class="progress-steps" id="progressSteps"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="generated-output" id="generatedOutput" style="display:none;">
-            <div class="code-header">
-                <div class="code-title">
-                    <i class="fas fa-code"></i> Your Website Code
-                </div>
-                <div class="code-actions">
-                    <button class="code-btn run-btn" onclick="runToolkit()">
-                        <i class="fas fa-play"></i> Run
-                    </button>
-                    <button class="code-btn copy-btn" onclick="copyCode()">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                    <button class="code-btn download-btn" onclick="downloadCode()">
-                        <i class="fas fa-download"></i> Download
-                    </button>
-                </div>
-            </div>
-            <textarea id="generatedCode" class="code-box" readonly></textarea>
-        </div>
-    </main>
-
-    <!-- Protected Access -->
-    <div class="protected-access" id="protectedAccess" style="display: none;">
-        <div class="protected-box">
-            <div class="protected-icon">
-                <i class="fas fa-lock"></i>
-            </div>
-            <h2>Access Required</h2>
-            <p>Please login to access the Toolkit Maker</p>
-            <div class="protected-actions">
-                <button class="btn-primary" onclick="openAuthModal('login')">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
-                <button class="btn-secondary" onclick="openAuthModal('register')">
-                    <i class="fas fa-user-plus"></i> Create Account
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Auth Modal -->
-    <div class="modal-overlay" id="authModal" style="display: none;">
-        <div class="modal-box auth-modal">
-            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
-            <div class="modal-header">
-                <h2 id="authModalTitle">Login</h2>
-                <p id="authModalSubtitle">Access your account</p>
-            </div>
-            
-            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <button type="submit" class="auth-submit-btn" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
-                <p class="auth-switch">
-                    Don't have an account? 
-                    <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
-                </p>
-            </form>
-            
-            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
-                <div class="form-group">
-                    <label><i class="fas fa-user"></i> Display Name</label>
-                    <input type="text" id="registerName" placeholder="Enter your name" required>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> Email</label>
-                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
-                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-lock"></i> Confirm Password</label>
-                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
-                    <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <button type="submit" class="auth-submit-btn" id="registerBtn">
-                    <i class="fas fa-user-plus"></i> Create Account
-                </button>
-                <p class="auth-switch">
-                    Already have an account? 
-                    <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
-                </p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Insufficient Credits Modal -->
-    <div class="modal-overlay" id="insufficientModal" style="display: none;">
-        <div class="modal-box insufficient-modal">
-            <button class="modal-close" onclick="closeInsufficientModal()">&times;</button>
-            <div class="modal-header">
-                <div class="insufficient-icon">
-                    <i class="fas fa-coins"></i>
-                </div>
-                <h2>Insufficient Credits</h2>
-                <p>You need 20 credits to access Toolkit Maker</p>
-            </div>
-            <div class="credits-info">
-                <div class="credit-row">
-                    <span>Current Credits:</span>
-                    <strong id="currentCreditsDisplay">0</strong>
-                </div>
-                <div class="credit-row">
-                    <span>Required Credits:</span>
-                    <strong id="requiredCreditsDisplay">20</strong>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="buy-credits-btn" onclick="goToBuyCredits()">
-                    <i class="fas fa-shopping-cart"></i> Buy Credits
-                </button>
-                <button class="close-modal-btn" onclick="closeInsufficientModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="toast-container" id="toastContainer"></div>
-
-    <div class="preview-modal" id="previewModal" style="display:none;">
-        <div class="preview-modal-header">
-            <span>Toolkit Preview</span>
-            <button onclick="closePreview()"><i class="fas fa-times"></i></button>
-        </div>
-        <iframe id="previewFrame" class="preview-frame"></iframe>
-    </div>
-
-    <script src="js/script.js"></script>
-    <script src="js/toolkit-maker.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/credits.js"></script>
-    
-    <script>
-        // ============ PROPER AUTH FLOW ============
-        let currentUser = null;
-        let currentUserData = null;
-        let authChecked = false;
-        
-        auth.onAuthStateChanged(function(user) {
-            const loadingOverlay = document.getElementById('authLoadingOverlay');
-            const mainContent = document.getElementById('toolkitMainContent');
-            const protectedAccess = document.getElementById('protectedAccess');
-            
-            if (user) {
-                // USER LOGGED IN
-                currentUser = user;
-                
-                // Update navbar
-                document.getElementById('guestButtons').style.display = 'none';
-                document.getElementById('userLoggedIn').style.display = 'flex';
-                
-                // Load user data from Firestore
-                db.collection('users').doc(user.uid).get().then((doc) => {
-                    if (doc.exists) {
-                        currentUserData = doc.data();
-                        document.getElementById('navUserName').textContent = currentUserData.displayName || 'Account';
-                        document.getElementById('navCredits').textContent = currentUserData.credits || 0;
-                        
-                        // Hide loading
-                        if (loadingOverlay) loadingOverlay.style.display = 'none';
-                        
-                        // Check account status
-                        if (currentUserData.accountStatus === 'disabled') {
-                            if (mainContent) mainContent.style.display = 'none';
-                            showToast('Your account is disabled. Contact support.', 'error');
-                            return;
-                        }
-                        
-                        // Check credits
-                        if ((currentUserData.credits || 0) < 20) {
-                            if (mainContent) mainContent.style.display = 'none';
-                            if (protectedAccess) protectedAccess.style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = currentUserData.credits || 0;
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                            return;
-                        }
-                        
-                        // Deduct 20 credits
-                        const userRef = db.collection('users').doc(user.uid);
-                        db.runTransaction((transaction) => {
-                            return transaction.get(userRef).then((doc) => {
-                                if (!doc.exists) throw new Error('User not found');
-                                const data = doc.data();
-                                const credits = data.credits || 0;
-                                if (credits < 20) throw new Error('Insufficient credits');
-                                const newCredits = credits - 20;
-                                transaction.update(userRef, { credits: newCredits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                                return newCredits;
-                            });
-                        }).then((newCredits) => {
-                            // SHOW TOOLKIT
-                            if (mainContent) mainContent.style.display = 'block';
-                            if (protectedAccess) protectedAccess.style.display = 'none';
-                            document.getElementById('navCredits').textContent = newCredits;
-                            showToast('20 credits deducted!', 'success');
-                        }).catch((error) => {
-                            if (mainContent) mainContent.style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = currentUserData.credits || 0;
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                        });
-                    } else {
-                        // Create user document
-                        db.collection('users').doc(user.uid).set({
-                            uid: user.uid,
-                            displayName: user.displayName || 'User',
-                            email: user.email,
-                            credits: 0,
-                            accountStatus: 'active',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }).then(() => {
-                            if (loadingOverlay) loadingOverlay.style.display = 'none';
-                            if (mainContent) mainContent.style.display = 'none';
-                            document.getElementById('currentCreditsDisplay').textContent = '0';
-                            document.getElementById('insufficientModal').style.display = 'flex';
-                        });
-                    }
-                }).catch((error) => {
-                    if (loadingOverlay) loadingOverlay.style.display = 'none';
-                    showToast('Error: ' + error.message, 'error');
-                });
-            } else {
-                // USER LOGGED OUT
-                currentUser = null;
-                currentUserData = null;
-                
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
-                if (mainContent) mainContent.style.display = 'none';
-                if (protectedAccess) protectedAccess.style.display = 'flex';
-                
-                document.getElementById('guestButtons').style.display = 'flex';
-                document.getElementById('userLoggedIn').style.display = 'none';
-            }
-        });
-    </script>
 </body>
-                    </html>
+</html>`;
+    
+    return fullCode;
+}
+
+// Show Generated Code
+function showGeneratedCode(code) {
+    document.getElementById('generationProgress').style.display = 'none';
+    document.getElementById('generatedOutput').style.display = 'block';
+    document.getElementById('generatedCode').value = code;
+    document.getElementById('generatedOutput').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Run Toolkit
+function runToolkit() {
+    const code = document.getElementById('generatedCode').value;
+    const previewModal = document.getElementById('previewModal');
+    const previewFrame = document.getElementById('previewFrame');
+    previewModal.style.display = 'flex';
+    previewFrame.srcdoc = code;
+}
+
+// Close Preview
+function closePreview() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+// Copy Code
+function copyCode() {
+    const codeBox = document.getElementById('generatedCode');
+    codeBox.select();
+    codeBox.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(codeBox.value).then(() => {
+        showToast('Code copied successfully!', 'success');
+    }).catch(() => {
+        document.execCommand('copy');
+        showToast('Code copied successfully!', 'success');
+    });
+}
+
+// Download Code
+function downloadCode() {
+    const code = document.getElementById('generatedCode').value;
+    const toolkitName = document.getElementById('toolkitName').value.trim() || 'toolkit';
+    const filename = toolkitName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.html';
+    const blob = new Blob([code], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Toolkit downloaded successfully!', 'success');
+}
