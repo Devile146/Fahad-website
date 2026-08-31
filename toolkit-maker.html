@@ -95,8 +95,8 @@
         </div>
     </aside>
 
-    <!-- MAIN CONTENT - HIDDEN -->
-    <main class="main-content toolkit-main" id="toolkitMainContent" style="display: none;">
+    <!-- MAIN CONTENT -->
+    <main class="main-content toolkit-main" id="toolkitMainContent" style="display:none;">
         <div class="toolkit-header">
             <h1 class="page-title">🛠️ <span class="gradient-text">Toolkit Maker</span></h1>
             <p class="page-description">Create your own premium toolkit website in minutes</p>
@@ -160,12 +160,12 @@
         </div>
     </main>
 
-    <!-- PROTECTED ACCESS -->
-    <div class="protected-access" id="protectedAccess" style="display: flex;">
+    <!-- LOGIN REQUIRED SCREEN -->
+    <div class="protected-access" id="protectedAccess" style="display:flex;">
         <div class="protected-box">
             <div class="protected-icon"><i class="fas fa-lock"></i></div>
-            <h2>Access Required</h2>
-            <p>Login required + 20 credits for Toolkit Maker</p>
+            <h2>Login Required</h2>
+            <p>Please login to access Toolkit Maker (20 credits)</p>
             <div class="protected-actions">
                 <button class="btn-primary" onclick="openAuthModal('login')"><i class="fas fa-sign-in-alt"></i> Login</button>
                 <button class="btn-secondary" onclick="openAuthModal('register')"><i class="fas fa-user-plus"></i> Create Account</button>
@@ -220,7 +220,6 @@
     </div>
 
     <script>
-        // ============ AUTH & SECURITY ============
         let currentUser = null;
         let currentUserData = null;
 
@@ -277,14 +276,55 @@
             .catch(err => { btn.disabled = false; showToast(err.message, 'error'); });
         }
 
-        // ============ TOOLKIT ACCESS CHECK ============
+        // ============ AUTO CHECK ============
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 currentUser = user;
+                // Navbar update
+                document.getElementById('guestButtons').style.display = 'none';
+                document.getElementById('userLoggedIn').style.display = 'flex';
+                
                 db.collection('users').doc(user.uid).get().then(doc => {
                     if (doc.exists) {
                         currentUserData = doc.data();
-                        checkAndOpenToolkit();
+                        document.getElementById('navUserName').textContent = currentUserData.displayName || 'Account';
+                        document.getElementById('navCredits').textContent = currentUserData.credits || 0;
+                        
+                        // Check access
+                        if (currentUserData.accountStatus === 'disabled') {
+                            showLoginScreen();
+                            showToast('Account disabled!', 'error');
+                            return;
+                        }
+                        
+                        if ((currentUserData.credits || 0) < 20) {
+                            showLoginScreen();
+                            document.getElementById('currentCreditsDisplay').textContent = currentUserData.credits || 0;
+                            document.getElementById('insufficientModal').style.display = 'flex';
+                            return;
+                        }
+                        
+                        // Deduct and open
+                        const userRef = db.collection('users').doc(currentUser.uid);
+                        db.runTransaction(tx => {
+                            return tx.get(userRef).then(doc => {
+                                if (!doc.exists) throw new Error('User not found');
+                                const data = doc.data();
+                                const credits = data.credits || 0;
+                                if (credits < 20) throw new Error('Insufficient credits');
+                                const newCredits = credits - 20;
+                                tx.update(userRef, { credits: newCredits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                return newCredits;
+                            });
+                        }).then(newCredits => {
+                            document.getElementById('toolkitMainContent').style.display = 'block';
+                            document.getElementById('protectedAccess').style.display = 'none';
+                            document.getElementById('navCredits').textContent = newCredits;
+                            showToast('20 credits deducted! Access granted!', 'success');
+                        }).catch(err => {
+                            showLoginScreen();
+                            showToast(err.message, 'error');
+                        });
                     } else {
                         showLoginScreen();
                     }
@@ -297,51 +337,13 @@
         function showLoginScreen() {
             document.getElementById('toolkitMainContent').style.display = 'none';
             document.getElementById('protectedAccess').style.display = 'flex';
-        }
-
-        function checkAndOpenToolkit() {
-            if (currentUserData.accountStatus === 'disabled') {
-                showLoginScreen();
-                showToast('Account disabled!', 'error');
-                return;
-            }
-
-            if ((currentUserData.credits || 0) < 20) {
-                showLoginScreen();
-                document.getElementById('currentCreditsDisplay').textContent = currentUserData.credits || 0;
-                document.getElementById('insufficientModal').style.display = 'flex';
-                return;
-            }
-
-            // Deduct 20 credits
-            const userRef = db.collection('users').doc(currentUser.uid);
-            db.runTransaction(tx => {
-                return tx.get(userRef).then(doc => {
-                    if (!doc.exists) throw new Error('User not found');
-                    const data = doc.data();
-                    const credits = data.credits || 0;
-                    if (credits < 20) throw new Error('Insufficient credits');
-                    const newCredits = credits - 20;
-                    tx.update(userRef, { credits: newCredits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                    return newCredits;
-                });
-            }).then(newCredits => {
-                // OPEN TOOLKIT
-                document.getElementById('toolkitMainContent').style.display = 'block';
-                document.getElementById('protectedAccess').style.display = 'none';
-                const navCredits = document.getElementById('navCredits');
-                if (navCredits) navCredits.textContent = newCredits;
-                showToast('20 credits deducted! Access granted!', 'success');
-            }).catch(err => {
-                showLoginScreen();
-                showToast(err.message, 'error');
-            });
+            document.getElementById('guestButtons').style.display = 'flex';
+            document.getElementById('userLoggedIn').style.display = 'none';
         }
     </script>
 
     <script src="js/toolkit-maker.js"></script>
     <script>
-        // Render themes on load
         if (typeof renderThemes === 'function') { renderThemes(); }
     </script>
 </body>
