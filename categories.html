@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Categories - Fahad Tech</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHJflwa4XJ9koDqfsQ2tOCDm93TTUhKqA",
+            authDomain: "fahad-tech-website.firebaseapp.com",
+            projectId: "fahad-tech-website",
+            storageBucket: "fahad-tech-website.firebasestorage.app",
+            messagingSenderId: "487340113323",
+            appId: "1:487340113323:web:6c0923e8c95b4064e5a6ee"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+</head>
+<body class="categories-page">
+    <div class="page-background"></div>
+    <div class="bg-glow-purple"></div>
+    <div class="bg-glow-blue"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <div class="logo-icon">FT</div>
+                <div class="logo-text">
+                    <span class="logo-name">FAHAD TECH</span>
+                    <span class="logo-tagline">Premium Platform</span>
+                </div>
+            </a>
+            <div class="nav-center">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="tools.html" class="nav-link">Tools</a>
+                <a href="categories.html" class="nav-link active">Categories</a>
+                <a href="toolkit-maker.html" class="nav-link">Toolkit Maker</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="contact.html" class="nav-link">Contact</a>
+            </div>
+            <div class="nav-right">
+                <!-- User Account Area -->
+                <div class="user-account-area" id="userAccountArea">
+                    <!-- Guest State -->
+                    <div class="guest-buttons" id="guestButtons">
+                        <button class="nav-auth-btn login-btn" onclick="openAuthModal('login')">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </button>
+                        <button class="nav-auth-btn register-btn" onclick="openAuthModal('register')">
+                            <i class="fas fa-user-plus"></i>
+                            Create Account
+                        </button>
+                    </div>
+                    
+                    <!-- Logged In State -->
+                    <div class="user-logged-in" id="userLoggedIn" style="display: none;">
+                        <div class="user-credits-display">
+                            <i class="fas fa-coins"></i>
+                            <span id="navCredits">0</span>
+                            <span class="credits-label">Credits</span>
+                        </div>
+                        <div class="user-profile-menu">
+                            <button class="profile-btn" onclick="goToAccount()">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="navUserName">Account</span>
+                            </button>
+                            <button class="logout-btn" onclick="logoutUser()">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="hamburger" id="hamburgerBtn">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="index.html">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="categories.html" class="active">Categories</a>
+            <a href="toolkit-maker.html">Toolkit Maker</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <div class="mobile-auth-area" id="mobileAuthArea">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
+    </nav>
+
+    <aside class="sidebar">
+        <div class="sidebar-inner">
+            <a href="index.html" class="sidebar-link"><i class="fas fa-home"></i><span>Home</span></a>
+            <a href="tools.html" class="sidebar-link"><i class="fas fa-tools"></i><span>Tools</span></a>
+            <a href="categories.html" class="sidebar-link active"><i class="fas fa-th-large"></i><span>Categories</span></a>
+            <a href="toolkit-maker.html" class="sidebar-link"><i class="fas fa-magic"></i><span>Toolkit Maker</span></a>
+            <a href="about.html" class="sidebar-link"><i class="fas fa-user"></i><span>About</span></a>
+            <a href="contact.html" class="sidebar-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+        </div>
+        <div class="sidebar-footer">
+            <a href="https://wa.me/923251138960" target="_blank" class="sidebar-social"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://t.me/fahad_tricks_bot" target="_blank" class="sidebar-social"><i class="fab fa-telegram"></i></a>
+            <a href="mailto:fahadali2727@gmail.com" class="sidebar-social"><i class="fas fa-envelope"></i></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Explore <span class="gradient-text">Categories</span></h1>
+            <p class="page-description">Browse our organized digital resources</p>
+        </div>
+
+        <div class="categories-grid" id="categoriesGrid">
+            <a href="javascript:void(0)" onclick="checkToolAccess('all')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(109,92,255,0.2),rgba(59,130,246,0.2));color:#6D5CFF;"><i class="fas fa-globe"></i></div>
+                <h3>All Tools</h3>
+                <p>Complete collection of digital resources</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('ai')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,77,145,0.2),rgba(109,92,255,0.2));color:#FF4D91;"><i class="fas fa-robot"></i></div>
+                <h3>AI Tools</h3>
+                <p>Artificial Intelligence platforms</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('photo')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(0,212,255,0.2));color:#3B82F6;"><i class="fas fa-image"></i></div>
+                <h3>Photo AI</h3>
+                <p>AI image generation tools</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('video')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,107,107,0.2),rgba(255,77,145,0.2));color:#FF6B6B;"><i class="fas fa-video"></i></div>
+                <h3>Video Makers</h3>
+                <p>AI video creation platforms</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('osint')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(74,222,128,0.2),rgba(59,130,246,0.2));color:#4ade80;"><i class="fas fa-search"></i></div>
+                <h3>OSINT Tools</h3>
+                <p>Open source intelligence</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('telegram')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(59,130,246,0.2));color:#00d4ff;"><i class="fab fa-telegram"></i></div>
+                <h3>Telegram Bots</h3>
+                <p>Useful Telegram bots</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('encoder')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,140,66,0.2));color:#ffd700;"><i class="fas fa-code"></i></div>
+                <h3>Encoders</h3>
+                <p>Encode/decode tools</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('social')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,77,145,0.2),rgba(255,140,66,0.2));color:#FF4D91;"><i class="fas fa-share-alt"></i></div>
+                <h3>Social Media</h3>
+                <p>Social media tools & tricks</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('mods')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(109,92,255,0.2),rgba(255,77,145,0.2));color:#6D5CFF;"><i class="fas fa-mobile-alt"></i></div>
+                <h3>Mod Apps</h3>
+                <p>Modified premium apps</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('hacking')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(0,255,0,0.2),rgba(0,200,0,0.2));color:#00ff00;"><i class="fas fa-shield-alt"></i></div>
+                <h3>Hacking Tools</h3>
+                <p>Educational security tools</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('prank')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,140,66,0.2),rgba(255,215,0,0.2));color:#FF8C42;"><i class="fas fa-laugh"></i></div>
+                <h3>Prank Tools</h3>
+                <p>Fun prank apps & tools</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('courses')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(0,212,255,0.2));color:#3B82F6;"><i class="fas fa-graduation-cap"></i></div>
+                <h3>Courses</h3>
+                <p>Free learning resources</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('gaming')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,77,145,0.2),rgba(109,92,255,0.2));color:#FF4D91;"><i class="fas fa-gamepad"></i></div>
+                <h3>Gaming</h3>
+                <p>Games & gaming tools</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('fonts')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(109,92,255,0.2));color:#00d4ff;"><i class="fas fa-font"></i></div>
+                <h3>Fonts</h3>
+                <p>Stylish fonts & text</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('utility')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(74,222,128,0.2),rgba(59,130,246,0.2));color:#4ade80;"><i class="fas fa-wrench"></i></div>
+                <h3>Utilities</h3>
+                <p>Useful utility tools</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+            <a href="javascript:void(0)" onclick="checkToolAccess('premium')" class="category-card">
+                <div class="category-icon" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,140,66,0.2));color:#ffd700;"><i class="fas fa-crown"></i></div>
+                <h3>Premium Tools</h3>
+                <p>Exclusive premium access</p>
+                <span class="category-badge">5 Credits</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal" style="display: none;">
+        <div class="modal-box auth-modal">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            <div class="modal-header">
+                <h2 id="authModalTitle">Login</h2>
+                <p id="authModalSubtitle">Access your account</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('register')">Register here</a>
+                </p>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Display Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Confirm your password" required minlength="6">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerConfirmPassword')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" class="auth-submit-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+                <p class="auth-switch">
+                    Already have an account? 
+                    <a href="javascript:void(0)" onclick="switchAuthMode('login')">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Insufficient Credits Modal -->
+    <div class="modal-overlay" id="insufficientModal" style="display: none;">
+        <div class="modal-box insufficient-modal">
+            <button class="modal-close" onclick="closeInsufficientModal()">&times;</button>
+            <div class="modal-header">
+                <div class="insufficient-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h2>Insufficient Credits</h2>
+                <p>You don't have enough credits for this action</p>
+            </div>
+            <div class="credits-info">
+                <div class="credit-row">
+                    <span>Current Credits:</span>
+                    <strong id="currentCreditsDisplay">0</strong>
+                </div>
+                <div class="credit-row">
+                    <span>Required Credits:</span>
+                    <strong id="requiredCreditsDisplay">0</strong>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="buy-credits-btn" onclick="goToBuyCredits()">
+                    <i class="fas fa-shopping-cart"></i>
+                    Buy Credits
+                </button>
+                <button class="close-modal-btn" onclick="closeInsufficientModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/script.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/credits.js"></script>
+    
+    <script>
+        // Initialize Firebase Auth State Detection
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                // User is logged in
+                loadUserData(user);
+            } else {
+                // User is logged out
+                showGuestState();
+            }
+        });
+    </script>
+</body>
+</html>
