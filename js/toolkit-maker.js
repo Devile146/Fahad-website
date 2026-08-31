@@ -634,6 +634,81 @@ function buildToolkitCode() {
         </footer>
     </div>
 </body>
+// TOOLKIT MAKER ACCESS CHECK
+let currentUser = null;
+let currentUserData = null;
+
+auth.onAuthStateChanged(function(user) {
+    if (user) {
+        currentUser = user;
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists) {
+                currentUserData = doc.data();
+                checkToolkitAccess();
+            }
+        });
+    } else {
+        showLoginRequired();
+    }
+});
+
+function checkToolkitAccess() {
+    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
+    const mainContent = document.getElementById('toolkitMainContent');
+    const protectedAccess = document.getElementById('protectedAccess');
+    
+    if (!currentUserData) {
+        showLoginRequired();
+        return;
+    }
+    
+    if (currentUserData.accountStatus === 'disabled') {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        showToast('Account disabled', 'error');
+        return;
+    }
+    
+    if (currentUserData.credits < 20) {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'none';
+        showInsufficientCredits(20);
+        return;
+    }
+    
+    // Deduct 20 credits
+    const userRef = db.collection('users').doc(currentUser.uid);
+    
+    db.runTransaction((transaction) => {
+        return transaction.get(userRef).then((doc) => {
+            if (!doc.exists) throw new Error('User not found');
+            const data = doc.data();
+            if ((data.credits || 0) < 20) throw new Error('Insufficient credits');
+            const newCredits = (data.credits || 0) - 20;
+            transaction.update(userRef, { credits: newCredits });
+            return newCredits;
+        });
+    }).then((newCredits) => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
+        if (protectedAccess) protectedAccess.style.display = 'none';
+        document.getElementById('navCredits').textContent = newCredits;
+        showToast('20 credits deducted!', 'success');
+    }).catch((error) => {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        showToast(error.message, 'error');
+    });
+}
+
+function showLoginRequired() {
+    const loadingOverlay = document.getElementById('toolkitLoadingOverlay');
+    const mainContent = document.getElementById('toolkitMainContent');
+    const protectedAccess = document.getElementById('protectedAccess');
+    
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'none';
+    if (protectedAccess) protectedAccess.style.display = 'flex';
+}
 </html>`;
     
     return fullCode;
