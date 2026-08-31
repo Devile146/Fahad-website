@@ -20,13 +20,65 @@ function loadUserData(user) {
         if (doc.exists) {
             currentUserData = doc.data();
             updateUserUI(user, currentUserData);
+            
+            // Account page load
+            if (window.location.pathname.includes('account.html')) {
+                displayAccountData(currentUserData);
+            }
         } else {
             createUserDocument(user);
         }
     }).catch((error) => {
         console.error("Error loading user data:", error);
-        showToast('Error loading user data', 'error');
+        
+        // Account page error
+        if (window.location.pathname.includes('account.html')) {
+            const loadingEl = document.getElementById('accountLoading');
+            const loginRequiredEl = document.getElementById('loginRequired');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
+        }
     });
+}
+
+// Display account data
+function displayAccountData(data) {
+    const loadingEl = document.getElementById('accountLoading');
+    const contentEl = document.getElementById('accountContent');
+    const loginRequiredEl = document.getElementById('loginRequired');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (loginRequiredEl) loginRequiredEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'block';
+    
+    const nameEl = document.getElementById('accountName');
+    const emailEl = document.getElementById('accountEmail');
+    const creditsEl = document.getElementById('accountCredits');
+    const statusEl = document.getElementById('accountStatus');
+    const memberSinceEl = document.getElementById('memberSince');
+    
+    if (nameEl) nameEl.textContent = data.displayName || 'User';
+    if (emailEl) emailEl.textContent = data.email || '';
+    if (creditsEl) creditsEl.textContent = data.credits || 0;
+    
+    if (statusEl) {
+        if (data.accountStatus === 'disabled') {
+            statusEl.innerHTML = '<span class="status-dot disabled"></span><span>Disabled</span>';
+        } else {
+            statusEl.innerHTML = '<span class="status-dot active"></span><span>Active</span>';
+        }
+    }
+    
+    if (memberSinceEl && data.createdAt) {
+        try {
+            const date = data.createdAt.toDate();
+            memberSinceEl.textContent = date.toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+        } catch(e) {
+            memberSinceEl.textContent = 'N/A';
+        }
+    }
 }
 
 // Create user document
@@ -44,10 +96,14 @@ function createUserDocument(user) {
     db.collection('users').doc(user.uid).set(userData).then(() => {
         currentUserData = userData;
         updateUserUI(user, userData);
+        
+        if (window.location.pathname.includes('account.html')) {
+            displayAccountData(userData);
+        }
+        
         showToast('Welcome to Fahad Tech!', 'success');
     }).catch((error) => {
         console.error("Error creating user document:", error);
-        showToast('Error creating account', 'error');
     });
 }
 
@@ -102,6 +158,17 @@ function showGuestState() {
             </button>
         `;
     }
+    
+    // Account page - show login required
+    if (window.location.pathname.includes('account.html')) {
+        const loadingEl = document.getElementById('accountLoading');
+        const contentEl = document.getElementById('accountContent');
+        const loginRequiredEl = document.getElementById('loginRequired');
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'none';
+        if (loginRequiredEl) loginRequiredEl.style.display = 'flex';
+    }
 }
 
 // Open auth modal
@@ -117,15 +184,15 @@ function openAuthModal(mode = 'login') {
     modal.style.display = 'flex';
     
     if (mode === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
-        modalTitle.textContent = 'Login';
-        modalSubtitle.textContent = 'Access your account';
+        if (loginForm) loginForm.style.display = 'block';
+        if (registerForm) registerForm.style.display = 'none';
+        if (modalTitle) modalTitle.textContent = 'Login';
+        if (modalSubtitle) modalSubtitle.textContent = 'Access your account';
     } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        modalTitle.textContent = 'Create Account';
-        modalSubtitle.textContent = 'Join Fahad Tech Premium';
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'block';
+        if (modalTitle) modalTitle.textContent = 'Create Account';
+        if (modalSubtitle) modalSubtitle.textContent = 'Join Fahad Tech Premium';
     }
 }
 
@@ -259,16 +326,14 @@ function goToAccount() {
 
 // Toast notification
 function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
+    let container = document.getElementById('toastContainer');
     if (!container) {
-        // Create container if doesn't exist
-        const newContainer = document.createElement('div');
-        newContainer.className = 'toast-container';
-        newContainer.id = 'toastContainer';
-        document.body.appendChild(newContainer);
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
     }
     
-    const toastContainer = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.classList.add('toast', `toast-${type}`);
     
@@ -284,7 +349,7 @@ function showToast(message, type = 'info') {
         <span>${message}</span>
     `;
     
-    toastContainer.appendChild(toast);
+    container.appendChild(toast);
     
     setTimeout(() => {
         toast.classList.add('show');
@@ -296,4 +361,4 @@ function showToast(message, type = 'info') {
             toast.remove();
         }, 300);
     }, 3000);
-}
+        }
